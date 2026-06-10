@@ -1,10 +1,134 @@
-import { useState, useEffect, useRef } from "react";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operations Dashboard — Del Bravo Trade & SoM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;}
+body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
 
+.dash{
+  padding:6px 10px;
+  height:100vh;
+  display:grid;
+  grid-template-rows:auto 1fr auto auto;
+  gap:5px;
+}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;}
+.topbar-title{font-size:11px;font-weight:700;color:#c9d1d9;text-transform:uppercase;letter-spacing:.06em;}
+.topbar-info{font-size:10px;color:#8b949e;}
+
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0;}
+.panel{background:#161b22;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;height:100%;}
+
+.panel-hdr{padding:5px 12px;flex-shrink:0;}
+.panel-hdr.dbt{background:#1D4ED8;}
+.panel-hdr.som{background:#6D28D9;}
+.panel-hdr span{font-size:14px;font-weight:700;color:#fff;}
+
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);flex-shrink:0;border-bottom:1px solid #30363d;}
+.kpi{padding:4px;text-align:center;border-right:1px solid #30363d;}
+.kpi:last-child{border-right:none;}
+.kpi-label{font-size:8px;color:#8b949e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px;}
+.kpi-val{font-size:24px;font-weight:700;line-height:1;}
+.kpi-val.total{color:#e6edf3;}
+.kpi-val.sent{color:#3fb950;}
+.kpi-val.pending{color:#f85149;}
+.kpi-val.process{color:#d29922;}
+
+.sec-title{
+  font-size:11px;font-weight:700;color:#c9d1d9;
+  text-transform:uppercase;letter-spacing:.08em;
+  padding:4px 8px;
+  background:#1a2030;
+  border-top:1px solid #30363d;
+  border-bottom:1px solid #30363d;
+  flex-shrink:0;
+}
+
+/* ORDERS TABLE — fills remaining space with empty rows */
+.orders-wrap{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+.tbl th{font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase;padding:3px 7px;background:#0d1117;border-bottom:1px solid #3a3f47;text-align:left;}
+.tbl td{padding:3px 7px;border-bottom:1px solid #2d333b;color:#c9d1d9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tbl tr:nth-child(odd)  td{background:#1c2128;}
+.tbl tr:nth-child(even) td{background:#161b22;}
+
+
+.badge{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;}
+.b-pend{background:#3d1a1a;color:#f85149;}
+.b-proc{background:#3d2e0a;color:#d29922;}
+.days-late{color:#f85149;font-weight:700;}
+.days-ok  {color:#3fb950;font-weight:700;}
+
+/* CLIENT TABLE — fixed at bottom of panel */
+.client-tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;flex-shrink:0;}
+.client-tbl th{font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase;padding:3px 7px;background:#0d1117;border-bottom:1px solid #3a3f47;text-align:center;}
+.client-tbl th:first-child{text-align:left;}
+.client-tbl td{padding:3px 7px;border-bottom:1px solid #2d333b;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.client-tbl tr:last-child td{border-bottom:none;}
+.client-tbl tr:nth-child(odd)  td{background:#1c2128;}
+.client-tbl tr:nth-child(even) td{background:#161b22;}
+.client-tbl td:first-child{text-align:left;color:#e6edf3;}
+
+/* CHART SECTION */
+.chart-section{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.chart-block{background:#161b22;border-radius:6px;overflow:hidden;}
+.chart-inner{display:flex;align-items:center;justify-content:center;gap:28px;padding:8px 20px;}
+canvas.donut{width:120px!important;height:120px!important;}
+.legend{font-size:12px;}
+.legend-item{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.legend-dot{width:13px;height:13px;border-radius:2px;flex-shrink:0;}
+.legend-label{color:#8b949e;flex:1;}
+.legend-val{font-weight:700;min-width:26px;text-align:right;font-size:15px;}
+
+.footer{font-size:8px;color:#484f58;text-align:center;}
+</style>
+</head>
+<body>
+<div class="dash">
+
+  <div class="topbar">
+    <span class="topbar-title">Operations Dashboard — Del Bravo Trade &amp; Specialties of Mexico</span>
+    <span class="topbar-info" id="ti">Cargando...</span>
+  </div>
+
+  <div class="panels" id="panels">
+    <div style="display:flex;align-items:center;justify-content:center;color:#484f58;font-size:12px;">Cargando DBT...</div>
+    <div style="display:flex;align-items:center;justify-content:center;color:#484f58;font-size:12px;">Cargando SoM...</div>
+  </div>
+
+  <div class="chart-section" id="charts" style="display:none;">
+    <div class="chart-block">
+      <div class="sec-title">Distribución de Órdenes — Del Bravo Trade</div>
+      <div class="chart-inner">
+        <canvas class="donut" id="dbt-donut" role="img" aria-label="Distribución DBT"></canvas>
+        <div class="legend" id="dbt-legend"></div>
+      </div>
+    </div>
+    <div class="chart-block">
+      <div class="sec-title">Distribución de Órdenes — Specialties of Mexico</div>
+      <div class="chart-inner">
+        <canvas class="donut" id="som-donut" role="img" aria-label="Distribución SoM"></canvas>
+        <div class="legend" id="som-legend"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer" id="footer"></div>
+</div>
+
+<script>
 const URL_DBT='https://docs.google.com/spreadsheets/d/e/2PACX-1vQMpWqX2-iTCv7zaSGYC0qTv1ThdAMmUmVMVJGw6zUgBxIy2SldaFWVdz0umVTVDiaF7n5JGQl2Urs5/pub?gid=1175753568&single=true&output=csv';
 const URL_SOM='https://docs.google.com/spreadsheets/d/e/2PACX-1vQMpWqX2-iTCv7zaSGYC0qTv1ThdAMmUmVMVJGw6zUgBxIy2SldaFWVdz0umVTVDiaF7n5JGQl2Urs5/pub?gid=705772395&single=true&output=csv';
-const MAX=10;
+const MAX_ORDERS = 10;
 
 function splitLine(l){const r=[];let c='',q=false;for(const ch of l){if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r;}
+
 function parseCSV(txt){
   const lines=txt.trim().split('\n');
   const hi=lines.findIndex(l=>l.toLowerCase().includes('cliente'));
@@ -19,181 +143,137 @@ function parseCSV(txt){
   }
   return rows;
 }
-function ns(s){if(!s)return'';const l=s.toLowerCase().trim();if(l==='enviado')return'Enviado';if(l==='pendiente')return'Pendiente';if(l.includes('proceso'))return'En proceso';return s;}
+
+function ns(s){
+  if(!s)return'';const l=s.toLowerCase().trim();
+  if(l==='enviado')return'Enviado';
+  if(l==='pendiente')return'Pendiente';
+  if(l.includes('proceso'))return'En proceso';
+  return s;
+}
 function gf(row,...keys){for(const k of keys)if(row[k]!==undefined&&row[k]!=='')return row[k];return'';}
 
-const S = {
-  wrap:{background:'#0d1117',padding:'6px 10px',fontFamily:'Calibri,Arial,sans-serif',color:'#c9d1d9',height:'100vh',display:'grid',gridTemplateRows:'auto 1fr auto auto',gap:5,boxSizing:'border-box'},
-  topbar:{display:'flex',justifyContent:'space-between',alignItems:'center'},
-  toptitle:{fontSize:11,fontWeight:700,color:'#c9d1d9',textTransform:'uppercase',letterSpacing:'.06em'},
-  topinfo:{fontSize:10,color:'#8b949e'},
-  panels:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,minHeight:0},
-  panel:{background:'#161b22',borderRadius:6,overflow:'hidden',display:'flex',flexDirection:'column',height:'100%'},
-  hdrDbt:{padding:'5px 12px',background:'#1D4ED8'},
-  hdrSom:{padding:'5px 12px',background:'#6D28D9'},
-  hdrTxt:{fontSize:14,fontWeight:700,color:'#fff'},
-  kpiStrip:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',flexShrink:0,borderBottom:'1px solid #30363d'},
-  kpi:{padding:4,textAlign:'center',borderRight:'1px solid #30363d'},
-  kpiLbl:{fontSize:8,color:'#8b949e',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:1},
-  secTitle:{fontSize:11,fontWeight:700,color:'#c9d1d9',textTransform:'uppercase',letterSpacing:'.08em',padding:'4px 8px',background:'#1a2030',borderTop:'1px solid #30363d',borderBottom:'1px solid #30363d',flexShrink:0},
-  th:{fontSize:10,fontWeight:700,color:'#8b949e',textTransform:'uppercase',padding:'3px 7px',background:'#0d1117',borderBottom:'1px solid #3a3f47',textAlign:'left',whiteSpace:'nowrap'},
-  chartSec:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10},
-  chartBlock:{background:'#161b22',borderRadius:6,overflow:'hidden'},
-  chartInner:{display:'flex',alignItems:'center',justifyContent:'center',gap:28,padding:'8px 20px'},
-  footer:{fontSize:8,color:'#484f58',textAlign:'center'},
-};
+function buildKPIs(rows){
+  const t=rows.length,
+        e=rows.filter(r=>ns(r['Estado'])==='Enviado').length,
+        p=rows.filter(r=>ns(r['Estado'])==='Pendiente').length,
+        pr=rows.filter(r=>ns(r['Estado'])==='En proceso').length;
+  return`<div class="kpi-strip">
+    <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-val total">${t}</div></div>
+    <div class="kpi"><div class="kpi-label">Enviados</div><div class="kpi-val sent">${e}</div></div>
+    <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-val pending">${p}</div></div>
+    <div class="kpi"><div class="kpi-label">En proceso</div><div class="kpi-val process">${pr}</div></div>
+  </div>`;}
 
-function KPIs({rows}){
-  const t=rows.length,e=rows.filter(r=>ns(r['Estado'])==='Enviado').length,
-        p=rows.filter(r=>ns(r['Estado'])==='Pendiente').length,pr=rows.filter(r=>ns(r['Estado'])==='En proceso').length;
-  return <div style={S.kpiStrip}>
-    {[['TOTAL',t,'#e6edf3'],['ENVIADOS',e,'#3fb950'],['PENDIENTES',p,'#f85149'],['EN PROCESO',pr,'#d29922']].map(([l,v,c],i)=>(
-      <div key={i} style={{...S.kpi,borderRight:i<3?'1px solid #30363d':'none'}}>
-        <div style={S.kpiLbl}>{l}</div>
-        <div style={{fontSize:24,fontWeight:700,lineHeight:1,color:c}}>{v}</div>
-      </div>
-    ))}
-  </div>;
-}
+function buildOrders(rows){
+  const active=rows.filter(r=>ns(r['Estado'])!=='Enviado').slice(0,MAX_ORDERS);
+  const cols = `<colgroup>
+    <col style="width:90px"><col style="width:130px"><col style="width:78px">
+    <col style="width:78px"><col style="width:90px"><col style="width:52px"><col style="width:90px">
+  </colgroup>`;
+  let h=`<div class="sec-title">Órdenes Activas</div>
+  <div class="orders-wrap">
+  <table class="tbl">${cols}
+    <thead><tr><th>PO #</th><th>Cliente</th><th>F.Pedido</th><th>Vence</th><th>Destino</th><th>Días</th><th>Estado</th></tr></thead>
+    <tbody>`;
+  active.forEach(r=>{
+    const dr=gf(r,'Días Restantes','Dias Restantes');
+    const d=parseInt(dr);
+    const ds=isNaN(d)||dr===''?'':(d<0?`<span class="days-late">${d}d</span>`:`<span class="days-ok">+${d}d</span>`);
+    const st=ns(r['Estado']);
+    const bg=st==='En proceso'?`<span class="badge b-proc">En proceso</span>`:`<span class="badge b-pend">Pendiente</span>`;
+    h+=`<tr>
+      <td>${gf(r,'PO #','PO#')}</td><td>${r['Cliente']||''}</td>
+      <td>${gf(r,'Fecha Pedido','F. Pedido')}</td>
+      <td>${gf(r,'Fecha Vencimiento','F. Venc.')}</td>
+      <td>${r['Destino']||''}</td><td>${ds}</td><td>${bg}</td>
+    </tr>`;
+  });
 
-function OrdersTable({rows}){
-  const active=rows.filter(r=>ns(r['Estado'])!=='Enviado').slice(0,MAX);
-  return <div style={{flexShrink:0}}>
-    <div style={S.secTitle}>Órdenes Activas</div>
-    <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,tableLayout:'fixed'}}>
-      <colgroup><col style={{width:88}}/><col style={{width:128}}/><col style={{width:76}}/><col style={{width:76}}/><col style={{width:88}}/><col style={{width:50}}/><col style={{width:88}}/></colgroup>
-      <thead><tr>{['PO #','Cliente','F.Pedido','Vence','Destino','Días','Estado'].map((h,i)=><th key={i} style={S.th}>{h}</th>)}</tr></thead>
-      <tbody>
-        {active.map((r,i)=>{
-          const dr=gf(r,'Días Restantes','Dias Restantes');
-          const d=parseInt(dr);
-          const st=ns(r['Estado']);
-          const bg=i%2===0?'#1c2128':'#161b22';
-          const td=(v,extra={})=>(<td style={{padding:'3px 7px',borderBottom:'1px solid #2d333b',background:bg,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',...extra}}>{v}</td>);
-          return <tr key={i}>
-            {td(gf(r,'PO #','PO#'))}
-            {td(r['Cliente']||'')}
-            {td(gf(r,'Fecha Pedido','F. Pedido'))}
-            {td(gf(r,'Fecha Vencimiento','F. Venc.'))}
-            {td(r['Destino']||'')}
-            {td(<span style={{color:!isNaN(d)&&d<0?'#f85149':'#3fb950',fontWeight:700}}>{isNaN(d)||dr===''?'':d<0?`${d}d`:`+${d}d`}</span>)}
-            {td(<span style={{display:'inline-block',padding:'1px 7px',borderRadius:4,fontSize:10,fontWeight:700,background:st==='En proceso'?'#3d2e0a':'#3d1a1a',color:st==='En proceso'?'#d29922':'#f85149'}}>{st}</span>)}
-          </tr>;
-        })}
-      </tbody>
-    </table>
-  </div>;
-}
+  h+='</tbody></table></div>';
+  return h;}
 
-function ClientTable({rows}){
+function buildClients(rows){
   const m={};
-  rows.forEach(r=>{const c=(r['Cliente']||'').trim();if(!c)return;if(!m[c])m[c]={t:0,e:0,p:0,pr:0};const s=ns(r['Estado']);m[c].t++;if(s==='Enviado')m[c].e++;if(s==='Pendiente')m[c].p++;if(s==='En proceso')m[c].pr++;});
-  return <div style={{flexShrink:0}}>
-    <div style={S.secTitle}>Por Cliente</div>
-    <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,tableLayout:'fixed'}}>
-      <colgroup><col style={{width:128}}/><col style={{width:38}}/><col style={{width:38}}/><col style={{width:48}}/><col style={{width:48}}/><col style={{width:62}}/></colgroup>
-      <thead><tr>
-        <th style={{...S.th}}>Cliente</th>
-        <th style={{...S.th,textAlign:'center'}}>Tot</th>
-        <th style={{...S.th,textAlign:'center',color:'#3fb950'}}>Env</th>
-        <th style={{...S.th,textAlign:'center',color:'#f85149'}}>Pend</th>
-        <th style={{...S.th,textAlign:'center',color:'#d29922'}}>Proc</th>
-        <th style={{...S.th,textAlign:'center'}}>% Compl.</th>
-      </tr></thead>
-      <tbody>
-        {Object.entries(m).map(([c,d],i)=>{
-          const pct=d.t>0?Math.round(d.e/d.t*100):0;
-          const pc=pct===100?'#3fb950':pct>0?'#d29922':'#f85149';
-          const bg=i%2===0?'#1c2128':'#161b22';
-          const td=(v,col)=>(<td style={{padding:'3px 7px',borderBottom:'1px solid #2d333b',background:bg,textAlign:'center',color:col||'#c9d1d9',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{v}</td>);
-          return <tr key={i}>
-            <td style={{padding:'3px 7px',borderBottom:'1px solid #2d333b',background:bg,color:'#e6edf3',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c}</td>
-            {td(d.t)}{td(d.e,'#3fb950')}{td(d.p,'#f85149')}{td(d.pr,'#d29922')}
-            <td style={{padding:'3px 7px',borderBottom:'1px solid #2d333b',background:bg,textAlign:'center',color:pc,fontWeight:700}}>{pct}%</td>
-          </tr>;
-        })}
-      </tbody>
-    </table>
-  </div>;
-}
+  rows.forEach(r=>{
+    const c=(r['Cliente']||'').trim();if(!c)return;
+    if(!m[c])m[c]={t:0,e:0,p:0,pr:0};
+    const s=ns(r['Estado']);m[c].t++;
+    if(s==='Enviado')m[c].e++;
+    if(s==='Pendiente')m[c].p++;
+    if(s==='En proceso')m[c].pr++;
+  });
+  let h=`<div class="sec-title">Por Cliente</div>
+  <table class="client-tbl">
+    <colgroup>
+      <col style="width:130px"><col style="width:40px"><col style="width:40px">
+      <col style="width:50px"><col style="width:50px"><col style="width:65px">
+    </colgroup>
+    <thead><tr>
+      <th>Cliente</th><th>Tot</th>
+      <th style="color:#3fb950">Env</th>
+      <th style="color:#f85149">Pend</th>
+      <th style="color:#d29922">Proc</th>
+      <th>% Compl.</th>
+    </tr></thead><tbody>`;
+  Object.entries(m).forEach(([c,d])=>{
+    const pct=d.t>0?Math.round(d.e/d.t*100):0;
+    const pc=pct===100?'#3fb950':pct>0?'#d29922':'#f85149';
+    h+=`<tr>
+      <td>${c}</td><td>${d.t}</td>
+      <td style="color:#3fb950">${d.e}</td>
+      <td style="color:#f85149">${d.p}</td>
+      <td style="color:#d29922">${d.pr}</td>
+      <td style="color:${pc};font-weight:700">${pct}%</td>
+    </tr>`;
+  });
+  return h+'</tbody></table>';}
 
-function Donut({id, rows}){
-  const ref=useRef(null); const chart=useRef(null);
+function buildDonut(cid,lid,rows){
   const e=rows.filter(r=>ns(r['Estado'])==='Enviado').length;
   const p=rows.filter(r=>ns(r['Estado'])==='Pendiente').length;
   const pr=rows.filter(r=>ns(r['Estado'])==='En proceso').length;
-  useEffect(()=>{
-    if(!ref.current||!window.Chart)return;
-    if(chart.current)chart.current.destroy();
-    chart.current=new window.Chart(ref.current.getContext('2d'),{
-      type:'doughnut',
-      data:{datasets:[{data:[e,p,pr],backgroundColor:['#3fb950','#f85149','#d29922'],borderWidth:2,borderColor:'#161b22'}]},
-      options:{responsive:false,plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:'60%'}
-    });
-    return()=>{if(chart.current)chart.current.destroy();};
-  },[e,p,pr]);
-  return <div style={S.chartInner}>
-    <canvas ref={ref} width={120} height={120}/>
-    <div style={{fontSize:12}}>
-      {[['Enviado',e,'#3fb950'],['Pendiente',p,'#f85149'],['En proceso',pr,'#d29922']].map(([l,v,c],i)=>(
-        <div key={i} style={{display:'flex',alignItems:'center',gap:9,marginBottom:8}}>
-          <span style={{width:13,height:13,borderRadius:2,background:c,flexShrink:0}}/>
-          <span style={{color:'#8b949e',flex:1}}>{l}</span>
-          <span style={{fontWeight:700,color:c,minWidth:26,textAlign:'right',fontSize:15}}>{v}</span>
-        </div>
-      ))}
-    </div>
-  </div>;
-}
+  new Chart(document.getElementById(cid).getContext('2d'),{
+    type:'doughnut',
+    data:{datasets:[{data:[e,p,pr],backgroundColor:['#3fb950','#f85149','#d29922'],borderWidth:2,borderColor:'#161b22'}]},
+    options:{responsive:false,plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:'60%'}
+  });
+  document.getElementById(lid).innerHTML=`
+    <div class="legend-item"><span class="legend-dot" style="background:#3fb950"></span><span class="legend-label">Enviado</span><span class="legend-val" style="color:#3fb950">${e}</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#f85149"></span><span class="legend-label">Pendiente</span><span class="legend-val" style="color:#f85149">${p}</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#d29922"></span><span class="legend-label">En proceso</span><span class="legend-val" style="color:#d29922">${pr}</span></div>`;}
 
-export default function App(){
-  const [rD,setRD]=useState([]);
-  const [rS,setRS]=useState([]);
-  const [info,setInfo]=useState('Cargando...');
-  const [err,setErr]=useState('');
+function buildPanel(rows,company,cls){
+  return`<div class="panel">
+    <div class="panel-hdr ${cls}"><span>${company}</span></div>
+    ${buildKPIs(rows)}
+    ${buildOrders(rows)}
+    ${buildClients(rows)}
+  </div>`;}
 
-  async function load(){
-    try{
-      const [cD,cS]=await Promise.all([fetch(URL_DBT).then(r=>r.text()),fetch(URL_SOM).then(r=>r.text())]);
-      const d=parseCSV(cD),s=parseCSV(cS);
-      setRD(d);setRS(s);
-      const f=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
-      setInfo(`Actualizado: ${f}  |  DBT: ${d.length} órdenes  |  SoM: ${s.length} órdenes`);
-      setErr('');
-    }catch(e){setErr(e.message);}
+async function init(){
+  try{
+    const [cD,cS]=await Promise.all([
+      fetch(URL_DBT).then(r=>r.text()),
+      fetch(URL_SOM).then(r=>r.text())
+    ]);
+    const rD=parseCSV(cD),rS=parseCSV(cS);
+    document.getElementById('panels').innerHTML=
+      buildPanel(rD,'Del Bravo Trade, LLC','dbt')+
+      buildPanel(rS,'Specialties of Mexico (SoM)','som');
+    document.getElementById('charts').style.display='grid';
+    buildDonut('dbt-donut','dbt-legend',rD);
+    buildDonut('som-donut','som-legend',rS);
+    const f=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+    document.getElementById('ti').textContent=`Actualizado: ${f}  |  DBT: ${rD.length} órdenes  |  SoM: ${rS.length} órdenes`;
+    document.getElementById('footer').textContent='Datos en tiempo real desde Google Sheets — se actualiza cada 30 segundos';
+  }catch(e){
+    document.getElementById('panels').innerHTML=
+      `<div style="display:flex;align-items:center;justify-content:center;color:#f85149;font-size:13px;grid-column:span 2">Error: ${e.message}</div>`;
   }
-
-  useEffect(()=>{load();const t=setInterval(load,30000);return()=>clearInterval(t);},[]);
-
-  if(err) return <div style={{background:'#0d1117',padding:20,color:'#f85149',fontFamily:'Calibri',fontSize:13}}>Error: {err}</div>;
-  if(!rD.length&&!rS.length) return <div style={{background:'#0d1117',height:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#484f58',fontFamily:'Calibri',fontSize:13}}>Cargando datos desde Google Sheets...</div>;
-
-  return <div style={S.wrap}>
-    <div style={S.topbar}>
-      <span style={S.toptitle}>Operations Dashboard — Del Bravo Trade &amp; Specialties of Mexico</span>
-      <span style={S.topinfo}>{info}</span>
-    </div>
-
-    <div style={S.panels}>
-      {[[rD,'Del Bravo Trade, LLC','dbt'],[rS,'Specialties of Mexico (SoM)','som']].map(([rows,name,cls],i)=>(
-        <div key={i} style={S.panel}>
-          <div style={cls==='dbt'?S.hdrDbt:S.hdrSom}><span style={S.hdrTxt}>{name}</span></div>
-          <KPIs rows={rows}/>
-          <OrdersTable rows={rows}/>
-          <ClientTable rows={rows}/>
-        </div>
-      ))}
-    </div>
-
-    <div style={S.chartSec}>
-      {[[rD,'dbt','DEL BRAVO TRADE'],[rS,'som','SPECIALTIES OF MEXICO']].map(([rows,id,lbl],i)=>(
-        <div key={i} style={S.chartBlock}>
-          <div style={S.secTitle}>Distribución de Órdenes — {lbl==='DEL BRAVO TRADE'?'Del Bravo Trade':'Specialties of Mexico'}</div>
-          <Donut id={id} rows={rows}/>
-        </div>
-      ))}
-    </div>
-
-    <div style={S.footer}>Datos en tiempo real desde Google Sheets — se actualiza cada 30 segundos</div>
-  </div>;
 }
+init();
+setInterval(init,30000);
+</script>
+</body>
+</html>
