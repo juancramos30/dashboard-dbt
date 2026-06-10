@@ -229,11 +229,13 @@ function buildClients(rows){
   });
   return h+'</tbody></table>';}
 
+const _charts={};
 function buildDonut(cid,lid,rows){
   const e=rows.filter(r=>ns(r['Estado'])==='Enviado').length;
   const p=rows.filter(r=>ns(r['Estado'])==='Pendiente').length;
   const pr=rows.filter(r=>ns(r['Estado'])==='En proceso').length;
-  new Chart(document.getElementById(cid).getContext('2d'),{
+  if(_charts[cid]){_charts[cid].destroy();delete _charts[cid];}
+  _charts[cid]=new Chart(document.getElementById(cid).getContext('2d'),{
     type:'doughnut',
     data:{datasets:[{data:[e,p,pr],backgroundColor:['#3fb950','#f85149','#d29922'],borderWidth:2,borderColor:'#161b22'}]},
     options:{responsive:false,plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:'60%'}
