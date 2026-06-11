@@ -188,7 +188,7 @@ function buildOrders(rows){
   });
   return h+'</tbody></table>';}
 
-function buildClients(rows){
+function buildClients(rows, small=false){
   const m={};
   rows.forEach(r=>{
     const c=(r['Cliente']||'').trim();if(!c)return;
@@ -198,25 +198,37 @@ function buildClients(rows){
     if(s==='Pendiente')m[c].p++;
     if(s==='En proceso')m[c].pr++;
   });
+  const fs  = small ? '11px' : '13px';
+  const fsh = small ? '9px'  : '11px';
+  const pd  = small ? '2px 5px' : '3px 7px';
+  const c1  = small ? '120px' : '140px';
+  const c2  = small ? '34px'  : '40px';
+  const c3  = small ? '34px'  : '40px';
+  const c4  = small ? '44px'  : '52px';
+  const c5  = small ? '44px'  : '52px';
+  const c6  = small ? '55px'  : '65px';
   let h=`<div class="sec-title">Por Cliente</div>
-  <table class="client-tbl">
-    <colgroup><col style="width:140px"><col style="width:40px"><col style="width:40px"><col style="width:52px"><col style="width:52px"><col style="width:65px"></colgroup>
+  <table class="client-tbl" style="font-size:${fs}">
+    <colgroup><col style="width:${c1}"><col style="width:${c2}"><col style="width:${c3}"><col style="width:${c4}"><col style="width:${c5}"><col style="width:${c6}"></colgroup>
     <thead><tr>
-      <th>Cliente</th><th>Tot</th>
-      <th style="color:#3fb950">Env</th>
-      <th style="color:#f85149">Pend</th>
-      <th style="color:#d29922">Proc</th>
-      <th>% Compl.</th>
+      <th style="font-size:${fsh};padding:${pd}">Cliente</th>
+      <th style="font-size:${fsh};padding:${pd};text-align:center">Tot</th>
+      <th style="font-size:${fsh};padding:${pd};text-align:center;color:#3fb950">Env</th>
+      <th style="font-size:${fsh};padding:${pd};text-align:center;color:#f85149">Pend</th>
+      <th style="font-size:${fsh};padding:${pd};text-align:center;color:#d29922">Proc</th>
+      <th style="font-size:${fsh};padding:${pd};text-align:center">% Compl.</th>
     </tr></thead><tbody>`;
   Object.entries(m).forEach(([c,d])=>{
     const pct=d.t>0?Math.round(d.e/d.t*100):0;
     const pc=pct===100?'#3fb950':pct>0?'#d29922':'#f85149';
+    const tdS=`padding:${pd};border-bottom:1px solid #2d333b;`;
     h+=`<tr>
-      <td>${c}</td><td>${d.t}</td>
-      <td style="color:#3fb950">${d.e}</td>
-      <td style="color:#f85149">${d.p}</td>
-      <td style="color:#d29922">${d.pr}</td>
-      <td style="color:${pc};font-weight:700">${pct}%</td>
+      <td style="${tdS}color:#e6edf3;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c}</td>
+      <td style="${tdS}text-align:center">${d.t}</td>
+      <td style="${tdS}text-align:center;color:#3fb950">${d.e}</td>
+      <td style="${tdS}text-align:center;color:#f85149">${d.p}</td>
+      <td style="${tdS}text-align:center;color:#d29922">${d.pr}</td>
+      <td style="${tdS}text-align:center;color:${pc};font-weight:700">${pct}%</td>
     </tr>`;
   });
   return h+'</tbody></table>';}
@@ -249,8 +261,8 @@ async function init(){
       `<div class="panel"><div class="panel-hdr som"><span>Specialties of Mexico (SoM)</span></div>${buildKPIs(rS)}${buildOrders(rS)}</div>`;
 
     // Client tables
-    document.getElementById('dbt-clients').innerHTML = buildClients(rD);
-    document.getElementById('som-clients').innerHTML = buildClients(rS);
+    document.getElementById('dbt-clients').innerHTML = buildClients(rD, false);
+    document.getElementById('som-clients').innerHTML = buildClients(rS, true);
     document.getElementById('clients').style.display='grid';
 
     // Charts
