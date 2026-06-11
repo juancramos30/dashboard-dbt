@@ -15,6 +15,7 @@ body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
 .topbar-title{font-size:13px;font-weight:700;color:#c9d1d9;text-transform:uppercase;letter-spacing:.06em;}
 .topbar-info{font-size:12px;color:#8b949e;}
 
+/* ORDERS — takes all available space */
 .panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0;}
 .panel{background:#161b22;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;}
 .panel-hdr{padding:6px 14px;flex-shrink:0;}
@@ -47,12 +48,11 @@ body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
 .days-ok{color:#3fb950;font-weight:700;}
 .days-warn{color:#d29922;font-weight:700;}
 
-/* CLIENT SECTION — side by side below orders */
+/* CLIENT ROW — fixed height, side by side, max 8 rows */
 .clients-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;}
 .client-panel{background:#161b22;border-radius:6px;overflow:hidden;}
-
-.client-tbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
-.client-tbl th{font-size:11px;font-weight:700;color:#8b949e;text-transform:uppercase;padding:3px 7px;background:#0d1117;border-bottom:1px solid #3a3f47;text-align:center;}
+.client-tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+.client-tbl th{font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase;padding:3px 7px;background:#0d1117;border-bottom:1px solid #3a3f47;text-align:center;}
 .client-tbl th:first-child{text-align:left;}
 .client-tbl td{padding:3px 7px;border-bottom:1px solid #2d333b;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .client-tbl tr:last-child td{border-bottom:none;}
@@ -60,16 +60,16 @@ body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
 .client-tbl tr:nth-child(even) td{background:#161b22;}
 .client-tbl td:first-child{text-align:left;color:#e6edf3;}
 
+/* CHART SECTION */
 .chart-section{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;}
 .chart-block{background:#161b22;border-radius:6px;overflow:hidden;}
-.chart-inner{display:flex;align-items:center;justify-content:center;gap:28px;padding:8px 22px;}
-canvas.donut{width:120px!important;height:120px!important;}
+.chart-inner{display:flex;align-items:center;justify-content:center;gap:28px;padding:7px 22px;}
+canvas.donut{width:110px!important;height:110px!important;}
 .legend{font-size:13px;}
-.legend-item{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
+.legend-item{display:flex;align-items:center;gap:9px;margin-bottom:6px;}
 .legend-dot{width:13px;height:13px;border-radius:2px;flex-shrink:0;}
 .legend-label{color:#8b949e;flex:1;}
 .legend-val{font-weight:700;min-width:28px;text-align:right;font-size:15px;}
-
 .footer{font-size:9px;color:#484f58;text-align:center;flex-shrink:0;}
 </style>
 </head>
@@ -81,19 +81,16 @@ canvas.donut{width:120px!important;height:120px!important;}
     <span class="topbar-info" id="ti">Cargando...</span>
   </div>
 
-  <!-- ORDERS PANELS -->
   <div class="panels" id="panels">
     <div style="display:flex;align-items:center;justify-content:center;color:#484f58;font-size:13px;">Cargando DBT...</div>
     <div style="display:flex;align-items:center;justify-content:center;color:#484f58;font-size:13px;">Cargando SoM...</div>
   </div>
 
-  <!-- CLIENT TABLES -->
   <div class="clients-row" id="clients" style="display:none;">
     <div class="client-panel" id="dbt-clients"></div>
     <div class="client-panel" id="som-clients"></div>
   </div>
 
-  <!-- CHARTS -->
   <div class="chart-section" id="charts" style="display:none;">
     <div class="chart-block">
       <div class="sec-title">Distribución de Órdenes — Del Bravo Trade</div>
@@ -117,7 +114,8 @@ canvas.donut{width:120px!important;height:120px!important;}
 <script>
 const URL_DBT='https://docs.google.com/spreadsheets/d/e/2PACX-1vSoBIqicKVmueKrNsbxUGrDXbkamuFsSr8uFxE-rsZTIZzv7XOfpwqp5CJolwfVM7B4T2jBI0KqwU0E/pub?gid=3593452&single=true&output=csv';
 const URL_SOM='https://docs.google.com/spreadsheets/d/e/2PACX-1vSoBIqicKVmueKrNsbxUGrDXbkamuFsSr8uFxE-rsZTIZzv7XOfpwqp5CJolwfVM7B4T2jBI0KqwU0E/pub?gid=1882307317&single=true&output=csv';
-const MAX=10;
+const MAX_ORDERS = 10;
+const MAX_CLIENTS = 8;
 
 function splitLine(l){const r=[];let c='',q=false;for(const ch of l){if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r;}
 
@@ -144,17 +142,10 @@ function ns(s){
   return s;
 }
 function gf(row,...keys){for(const k of keys)if(row[k]!==undefined&&row[k]!=='')return row[k];return'';}
-
-function daysClass(d){
-  if(isNaN(d)||d==='')return'';
-  if(d<0)return'days-late';
-  if(d<=5)return'days-warn';
-  return'days-ok';
-}
+function daysClass(d){if(isNaN(d)||d==='')return'';if(d<0)return'days-late';if(d<=5)return'days-warn';return'days-ok';}
 
 function buildKPIs(rows){
-  const t=rows.length,
-        e=rows.filter(r=>ns(r['Estado'])==='Enviado').length,
+  const t=rows.length,e=rows.filter(r=>ns(r['Estado'])==='Enviado').length,
         p=rows.filter(r=>ns(r['Estado'])==='Pendiente').length,
         pr=rows.filter(r=>ns(r['Estado'])==='En proceso').length;
   return`<div class="kpi-strip">
@@ -165,7 +156,7 @@ function buildKPIs(rows){
   </div>`;}
 
 function buildOrders(rows){
-  const active=rows.filter(r=>ns(r['Estado'])!=='Enviado').slice(0,MAX);
+  const active=rows.filter(r=>ns(r['Estado'])!=='Enviado').slice(0,MAX_ORDERS);
   let h=`<div class="sec-title">Órdenes Activas</div>
   <table class="tbl">
     <colgroup><col style="width:95px"><col style="width:140px"><col style="width:82px"><col style="width:82px"><col style="width:95px"><col style="width:54px"><col style="width:92px"></colgroup>
@@ -179,16 +170,14 @@ function buildOrders(rows){
     const badge=st==='En proceso'?`<span class="badge b-proc">En proceso</span>`:
                  st==='Enviado'  ?`<span class="badge b-sent">Enviado</span>`:
                                   `<span class="badge b-pend">Pendiente</span>`;
-    h+=`<tr>
-      <td>${gf(r,'PO #','PO#')}</td><td>${r['Cliente']||''}</td>
+    h+=`<tr><td>${gf(r,'PO #','PO#')}</td><td>${r['Cliente']||''}</td>
       <td>${gf(r,'Fecha Pedido','F. Pedido')}</td>
       <td>${gf(r,'Fecha Vencimiento','F. Venc.')}</td>
-      <td>${r['Destino']||''}</td><td>${ds}</td><td>${badge}</td>
-    </tr>`;
+      <td>${r['Destino']||''}</td><td>${ds}</td><td>${badge}</td></tr>`;
   });
   return h+'</tbody></table>';}
 
-function buildClients(rows, small=false){
+function buildClients(rows){
   const m={};
   rows.forEach(r=>{
     const c=(r['Cliente']||'').trim();if(!c)return;
@@ -198,38 +187,26 @@ function buildClients(rows, small=false){
     if(s==='Pendiente')m[c].p++;
     if(s==='En proceso')m[c].pr++;
   });
-  const fs  = small ? '11px' : '13px';
-  const fsh = small ? '9px'  : '11px';
-  const pd  = small ? '2px 5px' : '3px 7px';
-  const c1  = small ? '120px' : '140px';
-  const c2  = small ? '34px'  : '40px';
-  const c3  = small ? '34px'  : '40px';
-  const c4  = small ? '44px'  : '52px';
-  const c5  = small ? '44px'  : '52px';
-  const c6  = small ? '55px'  : '65px';
+  // Sort by total desc, take top MAX_CLIENTS
+  const sorted = Object.entries(m).sort((a,b)=>b[1].t-a[1].t).slice(0,MAX_CLIENTS);
   let h=`<div class="sec-title">Por Cliente</div>
-  <table class="client-tbl" style="font-size:${fs}">
-    <colgroup><col style="width:${c1}"><col style="width:${c2}"><col style="width:${c3}"><col style="width:${c4}"><col style="width:${c5}"><col style="width:${c6}"></colgroup>
+  <table class="client-tbl">
+    <colgroup><col style="width:140px"><col style="width:38px"><col style="width:38px"><col style="width:48px"><col style="width:48px"><col style="width:62px"></colgroup>
     <thead><tr>
-      <th style="font-size:${fsh};padding:${pd}">Cliente</th>
-      <th style="font-size:${fsh};padding:${pd};text-align:center">Tot</th>
-      <th style="font-size:${fsh};padding:${pd};text-align:center;color:#3fb950">Env</th>
-      <th style="font-size:${fsh};padding:${pd};text-align:center;color:#f85149">Pend</th>
-      <th style="font-size:${fsh};padding:${pd};text-align:center;color:#d29922">Proc</th>
-      <th style="font-size:${fsh};padding:${pd};text-align:center">% Compl.</th>
+      <th>Cliente</th><th>Tot</th>
+      <th style="color:#3fb950">Env</th>
+      <th style="color:#f85149">Pend</th>
+      <th style="color:#d29922">Proc</th>
+      <th>% Compl.</th>
     </tr></thead><tbody>`;
-  Object.entries(m).forEach(([c,d])=>{
+  sorted.forEach(([c,d])=>{
     const pct=d.t>0?Math.round(d.e/d.t*100):0;
     const pc=pct===100?'#3fb950':pct>0?'#d29922':'#f85149';
-    const tdS=`padding:${pd};border-bottom:1px solid #2d333b;`;
-    h+=`<tr>
-      <td style="${tdS}color:#e6edf3;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c}</td>
-      <td style="${tdS}text-align:center">${d.t}</td>
-      <td style="${tdS}text-align:center;color:#3fb950">${d.e}</td>
-      <td style="${tdS}text-align:center;color:#f85149">${d.p}</td>
-      <td style="${tdS}text-align:center;color:#d29922">${d.pr}</td>
-      <td style="${tdS}text-align:center;color:${pc};font-weight:700">${pct}%</td>
-    </tr>`;
+    h+=`<tr><td>${c}</td><td>${d.t}</td>
+      <td style="color:#3fb950">${d.e}</td>
+      <td style="color:#f85149">${d.p}</td>
+      <td style="color:#d29922">${d.pr}</td>
+      <td style="color:${pc};font-weight:700">${pct}%</td></tr>`;
   });
   return h+'</tbody></table>';}
 
@@ -255,17 +232,14 @@ async function init(){
     ]);
     const rD=parseCSV(cD),rS=parseCSV(cS);
 
-    // Orders panels
     document.getElementById('panels').innerHTML=
       `<div class="panel"><div class="panel-hdr dbt"><span>Del Bravo Trade, LLC</span></div>${buildKPIs(rD)}${buildOrders(rD)}</div>`+
       `<div class="panel"><div class="panel-hdr som"><span>Specialties of Mexico (SoM)</span></div>${buildKPIs(rS)}${buildOrders(rS)}</div>`;
 
-    // Client tables
-    document.getElementById('dbt-clients').innerHTML = buildClients(rD, false);
-    document.getElementById('som-clients').innerHTML = buildClients(rS, true);
+    document.getElementById('dbt-clients').innerHTML=buildClients(rD);
+    document.getElementById('som-clients').innerHTML=buildClients(rS);
     document.getElementById('clients').style.display='grid';
 
-    // Charts
     document.getElementById('charts').style.display='grid';
     buildDonut('dbt-donut','dbt-legend',rD);
     buildDonut('som-donut','som-legend',rS);
