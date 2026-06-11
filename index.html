@@ -123,8 +123,8 @@ canvas.donut{width:120px!important;height:120px!important;}
 </div>
 
 <script>
-const URL_DBT='https://docs.google.com/spreadsheets/d/e/2PACX-1vQMpWqX2-iTCv7zaSGYC0qTv1ThdAMmUmVMVJGw6zUgBxIy2SldaFWVdz0umVTVDiaF7n5JGQl2Urs5/pub?gid=1175753568&single=true&output=csv';
-const URL_SOM='https://docs.google.com/spreadsheets/d/e/2PACX-1vQMpWqX2-iTCv7zaSGYC0qTv1ThdAMmUmVMVJGw6zUgBxIy2SldaFWVdz0umVTVDiaF7n5JGQl2Urs5/pub?gid=705772395&single=true&output=csv';
+const URL_DBT='https://docs.google.com/spreadsheets/d/e/2PACX-1vSoBIqicKVmueKrNsbxUGrDXbkamuFsSr8uFxE-rsZTIZzv7XOfpwqp5CJolwfVM7B4T2jBI0KqwU0E/pub?gid=3593452&single=true&output=csv';
+const URL_SOM='https://docs.google.com/spreadsheets/d/e/2PACX-1vSoBIqicKVmueKrNsbxUGrDXbkamuFsSr8uFxE-rsZTIZzv7XOfpwqp5CJolwfVM7B4T2jBI0KqwU0E/pub?gid=1882307317&single=true&output=csv';
 const MAX_ORDERS = 10;
 
 function splitLine(l){const r=[];let c='',q=false;for(const ch of l){if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r;}
