@@ -20,7 +20,7 @@ body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
 .panel{background:#161b22;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;}
 .panel-hdr{padding:7px 16px;flex-shrink:0;}
 .panel-hdr.dbt{background:#1D4ED8;}
-.panel-hdr.som{background:#1D4ED8;}
+.panel-hdr.som{background:#0f2d5e;}
 .panel-hdr span{font-size:19px;font-weight:700;color:#fff;}
 
 .kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);flex-shrink:0;border-bottom:1px solid #30363d;}
@@ -34,6 +34,8 @@ body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
 .kpi-val.process{color:#d29922;}
 
 .sec-title{font-size:16px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:.08em;padding:6px 12px;background:#1a2030;border-top:1px solid #3a4a6b;border-bottom:1px solid #3a4a6b;flex-shrink:0;}
+.sec-title.dbt{background:#1D4ED8;border-top:1px solid #2563eb;border-bottom:1px solid #2563eb;}
+.sec-title.som{background:#0f2d5e;border-top:1px solid #1a4a8a;border-bottom:1px solid #1a4a8a;}
 
 .tbl{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;}
 .tbl th{font-size:12px;font-weight:700;color:#c9d1d9;text-transform:uppercase;padding:4px 8px;background:#0d1117;border-bottom:1px solid #3a4a6b;text-align:left;}
@@ -93,14 +95,14 @@ canvas.donut{width:125px!important;height:125px!important;}
 
   <div class="chart-section" id="charts" style="display:none;">
     <div class="chart-block">
-      <div class="sec-title">Distribución de Órdenes — Del Bravo Trade</div>
+      <div class="sec-title dbt">Distribución de Órdenes — Del Bravo Trade</div>
       <div class="chart-inner">
         <canvas class="donut" id="dbt-donut" role="img" aria-label="Distribución DBT"></canvas>
         <div class="legend" id="dbt-legend"></div>
       </div>
     </div>
     <div class="chart-block">
-      <div class="sec-title">Distribución de Órdenes — Specialties of Mexico</div>
+      <div class="sec-title som">Distribución de Órdenes — Specialties of Mexico</div>
       <div class="chart-inner">
         <canvas class="donut" id="som-donut" role="img" aria-label="Distribución SoM"></canvas>
         <div class="legend" id="som-legend"></div>
@@ -155,9 +157,9 @@ function buildKPIs(rows){
     <div class="kpi"><div class="kpi-label">En proceso</div><div class="kpi-val process">${pr}</div></div>
   </div>`;}
 
-function buildOrders(rows){
+function buildOrders(rows, cls=''){
   const active=rows.filter(r=>ns(r['Estado'])!=='Enviado').slice(0,MAX_ORDERS);
-  let h=`<div class="sec-title">Órdenes Activas</div>
+  let h=`<div class="sec-title ${cls}">Órdenes Activas</div>
   <table class="tbl">
     <colgroup><col style="width:105px"><col style="width:155px"><col style="width:90px"><col style="width:90px"><col style="width:105px"><col style="width:58px"><col style="width:100px"></colgroup>
     <thead><tr><th>PO #</th><th>Cliente</th><th>F.Pedido</th><th>Vence</th><th>Destino</th><th>Días</th><th>Estado</th></tr></thead>
@@ -177,7 +179,7 @@ function buildOrders(rows){
   });
   return h+'</tbody></table>';}
 
-function buildClients(rows){
+function buildClients(rows, cls=''){
   const m={};
   rows.forEach(r=>{
     const c=(r['Cliente']||'').trim();if(!c)return;
@@ -189,7 +191,7 @@ function buildClients(rows){
   });
   // Sort by total desc, take top MAX_CLIENTS
   const sorted = Object.entries(m).sort((a,b)=>b[1].t-a[1].t).slice(0,MAX_CLIENTS);
-  let h=`<div class="sec-title">Por Cliente</div>
+  let h=`<div class="sec-title ${cls}">Por Cliente</div>
   <table class="client-tbl">
     <colgroup><col style="width:155px"><col style="width:42px"><col style="width:42px"><col style="width:54px"><col style="width:54px"><col style="width:68px"></colgroup>
     <thead><tr>
@@ -233,11 +235,11 @@ async function init(){
     const rD=parseCSV(cD),rS=parseCSV(cS);
 
     document.getElementById('panels').innerHTML=
-      `<div class="panel"><div class="panel-hdr dbt"><span>Del Bravo Trade, LLC</span></div>${buildKPIs(rD)}${buildOrders(rD)}</div>`+
-      `<div class="panel"><div class="panel-hdr som"><span>Specialties of Mexico (SoM)</span></div>${buildKPIs(rS)}${buildOrders(rS)}</div>`;
+      `<div class="panel"><div class="panel-hdr dbt"><span>Del Bravo Trade, LLC</span></div>${buildKPIs(rD)}${buildOrders(rD,'dbt')}</div>`+
+      `<div class="panel"><div class="panel-hdr som"><span>Specialties of Mexico (SoM)</span></div>${buildKPIs(rS)}${buildOrders(rS,'som')}</div>`;
 
-    document.getElementById('dbt-clients').innerHTML=buildClients(rD);
-    document.getElementById('som-clients').innerHTML=buildClients(rS);
+    document.getElementById('dbt-clients').innerHTML=buildClients(rD,'dbt');
+    document.getElementById('som-clients').innerHTML=buildClients(rS,'som');
     document.getElementById('clients').style.display='grid';
 
     document.getElementById('charts').style.display='grid';
