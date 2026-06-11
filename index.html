@@ -9,70 +9,91 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:100%;height:100%;overflow:hidden;}
 body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
-.dash{padding:6px 10px;height:100vh;display:grid;grid-template-rows:auto 1fr auto auto;gap:5px;}
+.dash{padding:7px 12px;height:100vh;display:grid;grid-template-rows:auto 1fr auto auto auto;gap:5px;}
+
 .topbar{display:flex;justify-content:space-between;align-items:center;}
 .topbar-title{font-size:13px;font-weight:700;color:#c9d1d9;text-transform:uppercase;letter-spacing:.06em;}
-.topbar-info{font-size:11px;color:#8b949e;}
+.topbar-info{font-size:12px;color:#8b949e;}
+
 .panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0;}
-.panel{background:#161b22;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;height:100%;}
+.panel{background:#161b22;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;}
 .panel-hdr{padding:6px 14px;flex-shrink:0;}
 .panel-hdr.dbt{background:#1D4ED8;}
 .panel-hdr.som{background:#6D28D9;}
-.panel-hdr span{font-size:16px;font-weight:700;color:#fff;}
+.panel-hdr span{font-size:17px;font-weight:700;color:#fff;}
+
 .kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);flex-shrink:0;border-bottom:1px solid #30363d;}
-.kpi{padding:5px;text-align:center;border-right:1px solid #30363d;}
+.kpi{padding:5px 4px;text-align:center;border-right:1px solid #30363d;}
 .kpi:last-child{border-right:none;}
-.kpi-label{font-size:9px;color:#8b949e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
-.kpi-val{font-size:26px;font-weight:700;line-height:1;}
+.kpi-label{font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
+.kpi-val{font-size:28px;font-weight:700;line-height:1;}
 .kpi-val.total{color:#e6edf3;}
 .kpi-val.sent{color:#3fb950;}
 .kpi-val.pending{color:#f85149;}
 .kpi-val.process{color:#d29922;}
-.sec-title{font-size:12px;font-weight:700;color:#c9d1d9;text-transform:uppercase;letter-spacing:.08em;padding:4px 9px;background:#1a2030;border-top:1px solid #30363d;border-bottom:1px solid #30363d;flex-shrink:0;}
-.tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
-.tbl th{font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase;padding:3px 7px;background:#0d1117;border-bottom:1px solid #3a3f47;text-align:left;}
+
+.sec-title{font-size:13px;font-weight:700;color:#c9d1d9;text-transform:uppercase;letter-spacing:.08em;padding:4px 10px;background:#1a2030;border-top:1px solid #30363d;border-bottom:1px solid #30363d;flex-shrink:0;}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
+.tbl th{font-size:11px;font-weight:700;color:#8b949e;text-transform:uppercase;padding:3px 7px;background:#0d1117;border-bottom:1px solid #3a3f47;text-align:left;}
 .tbl td{padding:3px 7px;border-bottom:1px solid #2d333b;color:#c9d1d9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tbl tr:nth-child(odd) td{background:#1c2128;}
 .tbl tr:nth-child(even) td{background:#161b22;}
-.badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;}
 .b-pend{background:#3d1a1a;color:#f85149;}
 .b-proc{background:#3d2e0a;color:#d29922;}
 .b-sent{background:#0f2c1a;color:#3fb950;}
 .days-late{color:#f85149;font-weight:700;}
 .days-ok{color:#3fb950;font-weight:700;}
 .days-warn{color:#d29922;font-weight:700;}
-.client-tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;flex-shrink:0;}
-.client-tbl th{font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase;padding:3px 7px;background:#0d1117;border-bottom:1px solid #3a3f47;text-align:center;}
+
+/* CLIENT SECTION — side by side below orders */
+.clients-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;}
+.client-panel{background:#161b22;border-radius:6px;overflow:hidden;}
+
+.client-tbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
+.client-tbl th{font-size:11px;font-weight:700;color:#8b949e;text-transform:uppercase;padding:3px 7px;background:#0d1117;border-bottom:1px solid #3a3f47;text-align:center;}
 .client-tbl th:first-child{text-align:left;}
 .client-tbl td{padding:3px 7px;border-bottom:1px solid #2d333b;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .client-tbl tr:last-child td{border-bottom:none;}
 .client-tbl tr:nth-child(odd) td{background:#1c2128;}
 .client-tbl tr:nth-child(even) td{background:#161b22;}
 .client-tbl td:first-child{text-align:left;color:#e6edf3;}
+
 .chart-section{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;}
 .chart-block{background:#161b22;border-radius:6px;overflow:hidden;}
 .chart-inner{display:flex;align-items:center;justify-content:center;gap:28px;padding:8px 22px;}
 canvas.donut{width:120px!important;height:120px!important;}
-.legend{font-size:12px;}
-.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.legend{font-size:13px;}
+.legend-item{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
 .legend-dot{width:13px;height:13px;border-radius:2px;flex-shrink:0;}
 .legend-label{color:#8b949e;flex:1;}
 .legend-val{font-weight:700;min-width:28px;text-align:right;font-size:15px;}
+
 .footer{font-size:9px;color:#484f58;text-align:center;flex-shrink:0;}
 </style>
 </head>
 <body>
 <div class="dash">
+
   <div class="topbar">
     <span class="topbar-title">Operations Dashboard — Del Bravo Trade &amp; Specialties of Mexico</span>
     <span class="topbar-info" id="ti">Cargando...</span>
   </div>
 
+  <!-- ORDERS PANELS -->
   <div class="panels" id="panels">
-    <div style="display:flex;align-items:center;justify-content:center;color:#484f58;font-size:12px;">Cargando DBT...</div>
-    <div style="display:flex;align-items:center;justify-content:center;color:#484f58;font-size:12px;">Cargando SoM...</div>
+    <div style="display:flex;align-items:center;justify-content:center;color:#484f58;font-size:13px;">Cargando DBT...</div>
+    <div style="display:flex;align-items:center;justify-content:center;color:#484f58;font-size:13px;">Cargando SoM...</div>
   </div>
 
+  <!-- CLIENT TABLES -->
+  <div class="clients-row" id="clients" style="display:none;">
+    <div class="client-panel" id="dbt-clients"></div>
+    <div class="client-panel" id="som-clients"></div>
+  </div>
+
+  <!-- CHARTS -->
   <div class="chart-section" id="charts" style="display:none;">
     <div class="chart-block">
       <div class="sec-title">Distribución de Órdenes — Del Bravo Trade</div>
@@ -147,7 +168,7 @@ function buildOrders(rows){
   const active=rows.filter(r=>ns(r['Estado'])!=='Enviado').slice(0,MAX);
   let h=`<div class="sec-title">Órdenes Activas</div>
   <table class="tbl">
-    <colgroup><col style="width:92px"><col style="width:135px"><col style="width:80px"><col style="width:80px"><col style="width:92px"><col style="width:52px"><col style="width:90px"></colgroup>
+    <colgroup><col style="width:95px"><col style="width:140px"><col style="width:82px"><col style="width:82px"><col style="width:95px"><col style="width:54px"><col style="width:92px"></colgroup>
     <thead><tr><th>PO #</th><th>Cliente</th><th>F.Pedido</th><th>Vence</th><th>Destino</th><th>Días</th><th>Estado</th></tr></thead>
     <tbody>`;
   active.forEach(r=>{
@@ -179,7 +200,7 @@ function buildClients(rows){
   });
   let h=`<div class="sec-title">Por Cliente</div>
   <table class="client-tbl">
-    <colgroup><col style="width:135px"><col style="width:40px"><col style="width:40px"><col style="width:50px"><col style="width:50px"><col style="width:65px"></colgroup>
+    <colgroup><col style="width:140px"><col style="width:40px"><col style="width:40px"><col style="width:52px"><col style="width:52px"><col style="width:65px"></colgroup>
     <thead><tr>
       <th>Cliente</th><th>Tot</th>
       <th style="color:#3fb950">Env</th>
@@ -214,14 +235,6 @@ function buildDonut(cid,lid,rows){
     <div class="legend-item"><span class="legend-dot" style="background:#f85149"></span><span class="legend-label">Pendiente</span><span class="legend-val" style="color:#f85149">${p}</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#d29922"></span><span class="legend-label">En proceso</span><span class="legend-val" style="color:#d29922">${pr}</span></div>`;}
 
-function buildPanel(rows,company,cls){
-  return`<div class="panel">
-    <div class="panel-hdr ${cls}"><span>${company}</span></div>
-    ${buildKPIs(rows)}
-    ${buildOrders(rows)}
-    ${buildClients(rows)}
-  </div>`;}
-
 async function init(){
   try{
     const [cD,cS]=await Promise.all([
@@ -229,12 +242,22 @@ async function init(){
       fetch(URL_SOM).then(r=>r.text())
     ]);
     const rD=parseCSV(cD),rS=parseCSV(cS);
+
+    // Orders panels
     document.getElementById('panels').innerHTML=
-      buildPanel(rD,'Del Bravo Trade, LLC','dbt')+
-      buildPanel(rS,'Specialties of Mexico (SoM)','som');
+      `<div class="panel"><div class="panel-hdr dbt"><span>Del Bravo Trade, LLC</span></div>${buildKPIs(rD)}${buildOrders(rD)}</div>`+
+      `<div class="panel"><div class="panel-hdr som"><span>Specialties of Mexico (SoM)</span></div>${buildKPIs(rS)}${buildOrders(rS)}</div>`;
+
+    // Client tables
+    document.getElementById('dbt-clients').innerHTML = buildClients(rD);
+    document.getElementById('som-clients').innerHTML = buildClients(rS);
+    document.getElementById('clients').style.display='grid';
+
+    // Charts
     document.getElementById('charts').style.display='grid';
     buildDonut('dbt-donut','dbt-legend',rD);
     buildDonut('som-donut','som-legend',rS);
+
     const f=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
     document.getElementById('ti').textContent=`Actualizado: ${f}  |  DBT: ${rD.length} órdenes  |  SoM: ${rS.length} órdenes`;
     document.getElementById('footer').textContent='Datos en tiempo real desde Google Sheets — se actualiza cada 5 minutos';
