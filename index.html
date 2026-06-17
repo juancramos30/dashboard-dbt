@@ -4,24 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Operations Dashboard — Del Bravo Trade & SoM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@500;600;700&family=Geist+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:100%;height:100%;overflow:hidden;}
-body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
+body{background:#0d1117;font-family:'Geist',ui-sans-serif,system-ui,-apple-system,sans-serif;color:#c9d1d9;}
+.mono{font-family:'Geist Mono',ui-monospace,SFMono-Regular,monospace;font-variant-numeric:tabular-nums;}
 .dash{padding:7px 12px;height:100vh;display:grid;grid-template-rows:auto 1fr auto auto auto;gap:5px;}
 
 .topbar{display:flex;justify-content:space-between;align-items:center;}
 .topbar-title{font-size:19px;font-weight:700;color:#c9d1d9;text-transform:uppercase;letter-spacing:.06em;text-align:center;flex:1;}
-.topbar-info{font-size:13px;color:#8b949e;}
+.topbar-info{font-size:13px;color:#8b949e;display:inline-flex;align-items:center;gap:6px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#3fb950;animation:pulse 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 
 /* ORDERS — takes all available space */
 .panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0;}
-.panel{background:#161b22;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;}
-.panel-hdr{padding:7px 16px;flex-shrink:0;}
-.panel-hdr.dbt{background:#1D4ED8;}
-.panel-hdr.som{background:#0f2d5e;}
-.panel-hdr span{font-size:19px;font-weight:700;color:#fff;}
+.panel,.client-panel,.chart-block{position:relative;background:radial-gradient(150% 130% at 0% 0%,rgba(29,78,216,.10),transparent 55%),#161b22;border-radius:8px;overflow:hidden;}
+.panel::before,.client-panel::before,.chart-block::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#1D4ED8;}
+.panel::after,.client-panel::after,.chart-block::after{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:#1D4ED8;}
+.panel{display:flex;flex-direction:column;}
+.panel-hdr{padding:7px 16px;flex-shrink:0;display:flex;align-items:center;gap:8px;}
+.panel-hdr .dot{width:9px;height:9px;border-radius:2px;background:#1D4ED8;flex-shrink:0;}
+.panel-hdr span{font-size:19px;font-weight:700;color:#e6edf3;}
 
 .kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);flex-shrink:0;border-bottom:1px solid #30363d;}
 .kpi{padding:6px 4px;text-align:center;border-right:1px solid #30363d;}
@@ -33,9 +40,8 @@ body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
 .kpi-val.pending{color:#f85149;}
 .kpi-val.process{color:#d29922;}
 
-.sec-title{font-size:16px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:.08em;padding:6px 12px;background:#1a2030;border-top:1px solid #3a4a6b;border-bottom:1px solid #3a4a6b;flex-shrink:0;}
-.sec-title.dbt{background:#1D4ED8;border-top:1px solid #2563eb;border-bottom:1px solid #2563eb;}
-.sec-title.som{background:#0f2d5e;border-top:1px solid #1a4a8a;border-bottom:1px solid #1a4a8a;}
+.sec-title{font-size:16px;font-weight:700;color:#e6edf3;text-transform:uppercase;letter-spacing:.08em;padding:6px 12px;flex-shrink:0;display:flex;align-items:center;gap:8px;}
+.sec-title::before{content:'';width:7px;height:7px;border-radius:1px;background:#1D4ED8;flex-shrink:0;}
 
 .tbl{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;}
 .tbl th{font-size:12px;font-weight:700;color:#c9d1d9;text-transform:uppercase;padding:4px 8px;background:#0d1117;border-bottom:1px solid #3a4a6b;text-align:left;}
@@ -52,7 +58,6 @@ body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
 
 /* CLIENT ROW — fixed height, side by side, max 8 rows */
 .clients-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;}
-.client-panel{background:#161b22;border-radius:6px;overflow:hidden;}
 .client-tbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
 .client-tbl th{font-size:12px;font-weight:700;color:#c9d1d9;text-transform:uppercase;padding:5px 8px;background:#0d1117;border-bottom:1px solid #3a4a6b;text-align:center;}
 .client-tbl th:first-child{text-align:left;}
@@ -64,9 +69,12 @@ body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
 
 /* CHART SECTION */
 .chart-section{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;}
-.chart-block{background:#161b22;border-radius:6px;overflow:hidden;}
 .chart-inner{display:flex;align-items:center;justify-content:center;gap:30px;padding:8px 24px;}
 canvas.donut{width:125px!important;height:125px!important;}
+.donut-wrap{position:relative;width:125px;height:125px;flex-shrink:0;}
+.donut-hole{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+.donut-hole .num{font-size:21px;font-weight:700;color:#e6edf3;line-height:1;}
+.donut-hole .lbl{font-size:8px;color:#8b949e;text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
 .legend{font-size:14px;}
 .legend-item{display:flex;align-items:center;gap:9px;margin-bottom:6px;}
 .legend-dot{width:14px;height:14px;border-radius:2px;flex-shrink:0;}
@@ -97,14 +105,14 @@ canvas.donut{width:125px!important;height:125px!important;}
     <div class="chart-block">
       <div class="sec-title dbt">Distribución de Órdenes — Del Bravo Trade</div>
       <div class="chart-inner">
-        <canvas class="donut" id="dbt-donut" role="img" aria-label="Distribución DBT"></canvas>
+        <div class="donut-wrap"><canvas class="donut" id="dbt-donut" role="img" aria-label="Distribución DBT"></canvas><div class="donut-hole" id="dbt-hole"><span class="num mono"></span><span class="lbl">Total</span></div></div>
         <div class="legend" id="dbt-legend"></div>
       </div>
     </div>
     <div class="chart-block">
       <div class="sec-title som">Distribución de Órdenes — Specialties of Mexico</div>
       <div class="chart-inner">
-        <canvas class="donut" id="som-donut" role="img" aria-label="Distribución SoM"></canvas>
+        <div class="donut-wrap"><canvas class="donut" id="som-donut" role="img" aria-label="Distribución SoM"></canvas><div class="donut-hole" id="som-hole"><span class="num mono"></span><span class="lbl">Total</span></div></div>
         <div class="legend" id="som-legend"></div>
       </div>
     </div>
@@ -151,10 +159,10 @@ function buildKPIs(rows){
         p=rows.filter(r=>ns(r['Estado'])==='Pendiente').length,
         pr=rows.filter(r=>ns(r['Estado'])==='En proceso').length;
   return`<div class="kpi-strip">
-    <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-val total">${t}</div></div>
-    <div class="kpi"><div class="kpi-label">Enviados</div><div class="kpi-val sent">${e}</div></div>
-    <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-val pending">${p}</div></div>
-    <div class="kpi"><div class="kpi-label">En proceso</div><div class="kpi-val process">${pr}</div></div>
+    <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-val total mono">${t}</div></div>
+    <div class="kpi"><div class="kpi-label">Enviados</div><div class="kpi-val sent mono">${e}</div></div>
+    <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-val pending mono">${p}</div></div>
+    <div class="kpi"><div class="kpi-label">En proceso</div><div class="kpi-val process mono">${pr}</div></div>
   </div>`;}
 
 function buildOrders(rows, cls=''){
@@ -172,10 +180,10 @@ function buildOrders(rows, cls=''){
     const badge=st==='En proceso'?`<span class="badge b-proc">En proceso</span>`:
                  st==='Enviado'  ?`<span class="badge b-sent">Enviado</span>`:
                                   `<span class="badge b-pend">Pendiente</span>`;
-    h+=`<tr><td>${gf(r,'PO #','PO#')}</td><td>${r['Cliente']||''}</td>
-      <td>${gf(r,'Fecha Pedido','F. Pedido')}</td>
-      <td>${gf(r,'Fecha Vencimiento','F. Venc.')}</td>
-      <td>${r['Destino']||''}</td><td>${ds}</td><td>${badge}</td></tr>`;
+    h+=`<tr><td class="mono">${gf(r,'PO #','PO#')}</td><td>${r['Cliente']||''}</td>
+      <td class="mono">${gf(r,'Fecha Pedido','F. Pedido')}</td>
+      <td class="mono">${gf(r,'Fecha Vencimiento','F. Venc.')}</td>
+      <td>${r['Destino']||''}</td><td class="mono">${ds}</td><td>${badge}</td></tr>`;
   });
   return h+'</tbody></table>';}
 
@@ -204,15 +212,15 @@ function buildClients(rows, cls=''){
   sorted.forEach(([c,d])=>{
     const pct=d.t>0?Math.round(d.e/d.t*100):0;
     const pc=pct===100?'#3fb950':pct>0?'#d29922':'#f85149';
-    h+=`<tr><td>${c}</td><td>${d.t}</td>
-      <td style="color:#3fb950">${d.e}</td>
-      <td style="color:#f85149">${d.p}</td>
-      <td style="color:#d29922">${d.pr}</td>
-      <td style="color:${pc};font-weight:700">${pct}%</td></tr>`;
+    h+=`<tr><td>${c}</td><td class="mono">${d.t}</td>
+      <td class="mono" style="color:#3fb950">${d.e}</td>
+      <td class="mono" style="color:#f85149">${d.p}</td>
+      <td class="mono" style="color:#d29922">${d.pr}</td>
+      <td class="mono" style="color:${pc};font-weight:700">${pct}%</td></tr>`;
   });
   return h+'</tbody></table>';}
 
-function buildDonut(cid,lid,rows){
+function buildDonut(cid,lid,hid,rows){
   const e=rows.filter(r=>ns(r['Estado'])==='Enviado').length;
   const p=rows.filter(r=>ns(r['Estado'])==='Pendiente').length;
   const pr=rows.filter(r=>ns(r['Estado'])==='En proceso').length;
@@ -221,10 +229,11 @@ function buildDonut(cid,lid,rows){
     data:{datasets:[{data:[e,p,pr],backgroundColor:['#3fb950','#f85149','#d29922'],borderWidth:2,borderColor:'#161b22'}]},
     options:{responsive:false,plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:'62%'}
   });
+  document.querySelector(`#${hid} .num`).textContent=e+p+pr;
   document.getElementById(lid).innerHTML=`
-    <div class="legend-item"><span class="legend-dot" style="background:#3fb950"></span><span class="legend-label">Enviado</span><span class="legend-val" style="color:#3fb950">${e}</span></div>
-    <div class="legend-item"><span class="legend-dot" style="background:#f85149"></span><span class="legend-label">Pendiente</span><span class="legend-val" style="color:#f85149">${p}</span></div>
-    <div class="legend-item"><span class="legend-dot" style="background:#d29922"></span><span class="legend-label">En proceso</span><span class="legend-val" style="color:#d29922">${pr}</span></div>`;}
+    <div class="legend-item"><span class="legend-dot" style="background:#3fb950"></span><span class="legend-label">Enviado</span><span class="legend-val mono" style="color:#3fb950">${e}</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#f85149"></span><span class="legend-label">Pendiente</span><span class="legend-val mono" style="color:#f85149">${p}</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#d29922"></span><span class="legend-label">En proceso</span><span class="legend-val mono" style="color:#d29922">${pr}</span></div>`;}
 
 async function init(){
   try{
@@ -235,19 +244,19 @@ async function init(){
     const rD=parseCSV(cD),rS=parseCSV(cS);
 
     document.getElementById('panels').innerHTML=
-      `<div class="panel"><div class="panel-hdr dbt"><span>Del Bravo Trade, LLC</span></div>${buildKPIs(rD)}${buildOrders(rD,'dbt')}</div>`+
-      `<div class="panel"><div class="panel-hdr som"><span>Specialties of Mexico (SoM)</span></div>${buildKPIs(rS)}${buildOrders(rS,'som')}</div>`;
+      `<div class="panel"><div class="panel-hdr"><span class="dot"></span><span>Del Bravo Trade, LLC</span></div>${buildKPIs(rD)}${buildOrders(rD,'dbt')}</div>`+
+      `<div class="panel"><div class="panel-hdr"><span class="dot"></span><span>Specialties of Mexico (SoM)</span></div>${buildKPIs(rS)}${buildOrders(rS,'som')}</div>`;
 
     document.getElementById('dbt-clients').innerHTML=buildClients(rD,'dbt');
     document.getElementById('som-clients').innerHTML=buildClients(rS,'som');
     document.getElementById('clients').style.display='grid';
 
     document.getElementById('charts').style.display='grid';
-    buildDonut('dbt-donut','dbt-legend',rD);
-    buildDonut('som-donut','som-legend',rS);
+    buildDonut('dbt-donut','dbt-legend','dbt-hole',rD);
+    buildDonut('som-donut','som-legend','som-hole',rS);
 
     const f=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
-    document.getElementById('ti').textContent=`Actualizado: ${f}  |  DBT: ${rD.length} órdenes  |  SoM: ${rS.length} órdenes`;
+    document.getElementById('ti').innerHTML=`<span class="live-dot"></span>Actualizado: ${f}&nbsp;&nbsp;|&nbsp;&nbsp;<span class="mono">DBT: ${rD.length} órdenes</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span class="mono">SoM: ${rS.length} órdenes</span>`;
     document.getElementById('footer').textContent='Datos en tiempo real desde Google Sheets — se actualiza cada 5 minutos';
   }catch(e){
     document.getElementById('panels').innerHTML=
