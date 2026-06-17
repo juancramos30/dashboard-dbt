@@ -1,858 +1,261 @@
 <!DOCTYPE html>
-<html lang="es" x-data="store()" x-init="init()">
+<html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sabor Chido — Authentic Mexican Candy</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    [x-cloak] { display: none !important; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operations Dashboard — Del Bravo Trade & SoM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;}
+body{background:#0d1117;font-family:Calibri,Arial,sans-serif;color:#c9d1d9;}
+.dash{padding:7px 12px;height:100vh;display:grid;grid-template-rows:auto 1fr auto auto auto;gap:5px;}
 
-    :root {
-      --green:  #10B981;
-      --green2: #059669;
-      --green3: #047857;
-      --mint:   #D1FAE5;
-      --mint2:  #ECFDF5;
-      --gold:   #F59E0B;
-      --gold2:  #D97706;
-      --text:   #052E1A;
-      --text2:  #3D7A5A;
-    }
+.topbar{display:flex;justify-content:space-between;align-items:center;}
+.topbar-title{font-size:19px;font-weight:700;color:#c9d1d9;text-transform:uppercase;letter-spacing:.06em;text-align:center;flex:1;}
+.topbar-info{font-size:13px;color:#8b949e;}
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #F0FDF9;
-      min-height: 100vh;
-      color: var(--text);
-    }
+/* ORDERS — takes all available space */
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0;}
+.panel{background:#161b22;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;}
+.panel-hdr{padding:7px 16px;flex-shrink:0;}
+.panel-hdr.dbt{background:#1D4ED8;}
+.panel-hdr.som{background:#0f2d5e;}
+.panel-hdr span{font-size:19px;font-weight:700;color:#fff;}
 
-    h1, h2, h3, .brand { font-family: 'Fredoka', sans-serif; }
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);flex-shrink:0;border-bottom:1px solid #30363d;}
+.kpi{padding:6px 4px;text-align:center;border-right:1px solid #30363d;}
+.kpi:last-child{border-right:none;}
+.kpi-label{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
+.kpi-val{font-size:32px;font-weight:700;line-height:1;}
+.kpi-val.total{color:#e6edf3;}
+.kpi-val.sent{color:#3fb950;}
+.kpi-val.pending{color:#f85149;}
+.kpi-val.process{color:#d29922;}
 
-    ::-webkit-scrollbar { width: 7px; height: 7px; }
-    ::-webkit-scrollbar-track { background: #E8FDF5; }
-    ::-webkit-scrollbar-thumb {
-      background: linear-gradient(var(--green), var(--gold));
-      border-radius: 99px;
-    }
+.sec-title{font-size:16px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:.08em;padding:6px 12px;background:#1a2030;border-top:1px solid #3a4a6b;border-bottom:1px solid #3a4a6b;flex-shrink:0;}
+.sec-title.dbt{background:#1D4ED8;border-top:1px solid #2563eb;border-bottom:1px solid #2563eb;}
+.sec-title.som{background:#0f2d5e;border-top:1px solid #1a4a8a;border-bottom:1px solid #1a4a8a;}
 
-    /* ── PAPEL PICADO ── */
-    .picado {
-      height: 4px;
-      background: repeating-linear-gradient(
-        90deg,
-        #EC4899 0px,  #EC4899 32px,
-        #F59E0B 32px, #F59E0B 64px,
-        #10B981 64px, #10B981 96px,
-        #60A5FA 96px, #60A5FA 128px,
-        #F87171 128px,#F87171 160px
-      );
-      opacity: 0.75;
-    }
+.tbl{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;}
+.tbl th{font-size:12px;font-weight:700;color:#c9d1d9;text-transform:uppercase;padding:4px 8px;background:#0d1117;border-bottom:1px solid #3a4a6b;text-align:left;}
+.tbl td{padding:4px 8px;border-bottom:1px solid #2d333b;color:#c9d1d9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;}
+.tbl tr:nth-child(odd) td{background:#1e2d45;}
+.tbl tr:nth-child(even) td{background:#161b22;}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;}
+.b-pend{background:#3d1a1a;color:#f85149;}
+.b-proc{background:#3d2e0a;color:#d29922;}
+.b-sent{background:#0f2c1a;color:#3fb950;}
+.days-late{color:#f85149;font-weight:700;}
+.days-ok{color:#3fb950;font-weight:700;}
+.days-warn{color:#d29922;font-weight:700;}
 
-    /* ── HEADER ── */
-    header {
-      background: rgba(255,255,255,0.97);
-      backdrop-filter: blur(24px);
-      border-bottom: 1px solid rgba(16,185,129,0.18);
-      box-shadow: 0 2px 20px rgba(16,185,129,0.08);
-    }
+/* CLIENT ROW — fixed height, side by side, max 8 rows */
+.clients-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;}
+.client-panel{background:#161b22;border-radius:6px;overflow:hidden;}
+.client-tbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
+.client-tbl th{font-size:12px;font-weight:700;color:#c9d1d9;text-transform:uppercase;padding:5px 8px;background:#0d1117;border-bottom:1px solid #3a4a6b;text-align:center;}
+.client-tbl th:first-child{text-align:left;}
+.client-tbl td{padding:4px 8px;border-bottom:1px solid #2d333b;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;}
+.client-tbl tr:last-child td{border-bottom:none;}
+.client-tbl tr:nth-child(odd) td{background:#1e2d45;}
+.client-tbl tr:nth-child(even) td{background:#161b22;}
+.client-tbl td:first-child{text-align:left;color:#e6edf3;}
 
-    /* ── HERO ── */
-    .hero-section {
-      background:
-        radial-gradient(ellipse 65% 80% at 85% 50%, rgba(16,185,129,0.1) 0%, transparent 60%),
-        radial-gradient(ellipse 55% 70% at 5%  50%, rgba(245,158,11,0.08) 0%, transparent 60%),
-        linear-gradient(160deg, #E8FDF5 0%, #F0FDF9 45%, #FFFBEB 100%);
-      border-bottom: 1px solid rgba(16,185,129,0.12);
-      position: relative; overflow: hidden;
-    }
-    .hero-section::before {
-      content: '';
-      position: absolute; top: -80px; right: -80px;
-      width: 450px; height: 450px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 65%);
-      pointer-events: none;
-    }
-    .hero-section::after {
-      content: '';
-      position: absolute; bottom: -60px; left: -60px;
-      width: 360px; height: 360px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 65%);
-      pointer-events: none;
-    }
-
-    /* ── BRAND FILTER BAR ── */
-    .brand-bar {
-      background: rgba(255,255,255,0.98);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(16,185,129,0.12);
-      box-shadow: 0 2px 12px rgba(16,185,129,0.06);
-    }
-
-    .brand-tab {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 5px 10px; border-radius: 14px; cursor: pointer;
-      border: 2px solid #D1FAE5;
-      background: #fff;
-      transition: all 0.25s cubic-bezier(0.23,1,0.32,1);
-      white-space: nowrap; flex-shrink: 0;
-      font-size: 13px; font-weight: 600;
-      color: var(--text2); font-family: 'Fredoka', sans-serif;
-      min-width: 80px;
-    }
-    .brand-tab:hover {
-      border-color: var(--green);
-      background: var(--mint2);
-      transform: translateY(-3px);
-      box-shadow: 0 6px 18px rgba(16,185,129,0.15);
-    }
-    .brand-tab.active {
-      border-color: var(--green);
-      background: var(--mint2);
-      box-shadow: 0 4px 14px rgba(16,185,129,0.22), 0 0 0 3px rgba(16,185,129,0.1);
-    }
-    .brand-tab.active img {
-      filter: drop-shadow(0 2px 10px rgba(16,185,129,0.35)) saturate(1.1);
-    }
-    .brand-tab img {
-      height: 52px; width: auto; max-width: 140px;
-      object-fit: contain;
-      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.12));
-      transition: all 0.25s;
-    }
-    .brand-tab-all {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 8px 18px; border-radius: 10px;
-      font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
-      text-transform: uppercase; cursor: pointer;
-      border: 1.5px solid rgba(16,185,129,0.3);
-      background: rgba(16,185,129,0.05);
-      color: var(--green2);
-      transition: all 0.25s; white-space: nowrap; flex-shrink: 0;
-      font-family: 'Fredoka', sans-serif;
-    }
-    .brand-tab-all:hover {
-      border-color: var(--green);
-      background: var(--mint2);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(16,185,129,0.15);
-    }
-    .brand-tab-all.active {
-      background: linear-gradient(135deg, var(--green), var(--gold));
-      color: #fff; border-color: var(--green);
-      box-shadow: 0 6px 20px rgba(16,185,129,0.3);
-    }
-
-    /* ── CANDY CARD ── */
-    .candy-card {
-      background: #fff;
-      border: 1.5px solid #D1FAE5;
-      border-radius: 20px; overflow: hidden; cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.23,1,0.32,1);
-      position: relative;
-      box-shadow: 0 2px 12px rgba(16,185,129,0.07);
-      animation: float 4s ease-in-out infinite;
-    }
-    .candy-card:nth-child(2) { animation-delay: 0.2s; }
-    .candy-card:nth-child(3) { animation-delay: 0.4s; }
-    .candy-card:nth-child(4) { animation-delay: 0.6s; }
-    .candy-card:nth-child(5) { animation-delay: 0.8s; }
-    .candy-card:nth-child(n+6) { animation-delay: 1s; }
-    .candy-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--green), var(--gold), var(--green));
-      opacity: 0; transition: opacity 0.3s;
-    }
-    .candy-card:hover::before { opacity: 1; }
-    .candy-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(16,185,129,0.45);
-      box-shadow: 0 20px 48px rgba(16,185,129,0.15), 0 0 0 1px rgba(16,185,129,0.12);
-    }
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50%       { transform: translateY(-8px); }
-    }
-
-    /* ── CART BADGE ── */
-    .cart-badge { animation: pop-bounce 0.5s cubic-bezier(0.34,1.56,0.64,1); }
-    @keyframes pop-bounce {
-      0%   { transform: scale(0); }
-      60%  { transform: scale(1.3); }
-      100% { transform: scale(1); }
-    }
-
-    /* ── MODAL ── */
-    .modal-backdrop {
-      background: rgba(5,46,26,0.4);
-      backdrop-filter: blur(8px);
-    }
-
-    /* ── FORM INPUTS ── */
-    input, textarea, select {
-      background: #fff !important;
-      border: 1.5px solid #D1FAE5 !important;
-      color: var(--text) !important;
-      transition: all 0.25s !important;
-      border-radius: 12px !important;
-    }
-    input:focus, textarea:focus, select:focus {
-      background: #fff !important;
-      border-color: var(--green) !important;
-      box-shadow: 0 0 0 3px rgba(16,185,129,0.12) !important;
-      outline: none !important;
-    }
-    input::placeholder, textarea::placeholder {
-      color: rgba(61,122,90,0.45) !important;
-    }
-    select option { color: var(--text); background: #fff; }
-
-    /* ── SPINNER ── */
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .animate-spin { animation: spin 1s linear infinite !important; }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-      .hero-inner { flex-direction: column !important; align-items: center !important; text-align: center; }
-      .hero-inner .hero-info { align-items: center !important; }
-      .candy-card { animation: none; }
-    }
-  </style>
-
-  <script>
-    tailwind.config = {
-      theme: { extend: { colors: {
-        green: { DEFAULT: '#10B981', dark: '#059669', darker: '#047857' },
-        mint:  { DEFAULT: '#D1FAE5', light: '#ECFDF5' },
-        gold:  { DEFAULT: '#F59E0B', dark: '#D97706' },
-      }}}
-    }
-  </script>
+/* CHART SECTION */
+.chart-section{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;}
+.chart-block{background:#161b22;border-radius:6px;overflow:hidden;}
+.chart-inner{display:flex;align-items:center;justify-content:center;gap:30px;padding:8px 24px;}
+canvas.donut{width:125px!important;height:125px!important;}
+.legend{font-size:14px;}
+.legend-item{display:flex;align-items:center;gap:9px;margin-bottom:6px;}
+.legend-dot{width:14px;height:14px;border-radius:2px;flex-shrink:0;}
+.legend-label{color:#8b949e;flex:1;}
+.legend-val{font-weight:700;min-width:30px;text-align:right;font-size:16px;}
+.footer{font-size:10px;color:#484f58;text-align:center;flex-shrink:0;}
+</style>
 </head>
 <body>
+<div class="dash">
 
-<div class="picado"></div>
-
-<!-- ─── HEADER ──────────────────────────────────────────────────── -->
-<header class="sticky top-0 z-40 shadow-sm">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-
-    <!-- Logo nav: logo-sabor-chido-nav.png (plano) -->
-    <div class="flex items-center gap-3">
-      <img src="img/logo-sabor-chido-nav.png" alt="Sabor Chido"
-           class="h-14 w-auto object-contain"
-           style="filter: drop-shadow(0 2px 8px rgba(16,185,129,0.25))"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
-      <div style="display:none" class="items-center gap-2">
-        <span class="text-3xl">🦎</span>
-        <div>
-          <p class="brand text-xl font-bold leading-none">
-            <span style="color:var(--green)">Sabor</span>
-            <span style="color:var(--text)"> Chido</span>
-          </p>
-          <p class="text-xs font-medium tracking-wide" style="color:var(--text2)">Authentic Mexican Candy</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Carrito -->
-    <button @click="cartOpen = true"
-      class="relative flex items-center gap-2 text-white px-6 py-2.5 rounded-xl font-semibold transition-all hover:-translate-y-0.5"
-      style="background:linear-gradient(135deg,var(--green),var(--gold));box-shadow:0 4px 16px rgba(16,185,129,0.3);font-family:'Fredoka',sans-serif">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-      </svg>
-      <span>Carrito</span>
-      <span x-show="cartCount > 0" x-text="cartCount"
-        class="cart-badge absolute -top-3 -right-3 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg"></span>
-    </button>
+  <div class="topbar">
+    <span class="topbar-title">Operations Dashboard — Del Bravo Trade &amp; Specialties of Mexico</span>
+    <span class="topbar-info" id="ti">Cargando...</span>
   </div>
-</header>
 
-<!-- ─── HERO ─────────────────────────────────────────────────────── -->
-<section class="hero-section py-10 px-4 sm:px-8">
-  <div class="max-w-5xl mx-auto hero-inner flex items-center gap-12" style="position:relative;z-index:1">
+  <div class="panels" id="panels">
+    <div style="display:flex;align-items:center;justify-content:center;color:#484f58;font-size:13px;">Cargando DBT...</div>
+    <div style="display:flex;align-items:center;justify-content:center;color:#484f58;font-size:13px;">Cargando SoM...</div>
+  </div>
 
-    <!-- Logo 3D del ajolote: logo-sabor-chido.png -->
-    <div style="flex-shrink:0; animation:float 5s ease-in-out infinite;">
-      <img src="img/logo-sabor-chido.png" alt="Sabor Chido"
-           style="height:330px; width:auto; filter:drop-shadow(0 16px 48px rgba(16,185,129,0.3))"
-           onerror="this.style.display='none'"/>
-    </div>
+  <div class="clients-row" id="clients" style="display:none;">
+    <div class="client-panel" id="dbt-clients"></div>
+    <div class="client-panel" id="som-clients"></div>
+  </div>
 
-    <!-- Info a la derecha -->
-    <div class="hero-info flex flex-col gap-4" style="flex:1">
-      <div style="display:inline-flex;align-items:center;gap:8px;
-                  background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(245,158,11,0.07));
-                  border:1px solid rgba(16,185,129,0.25);border-radius:100px;
-                  padding:5px 16px;font-size:11px;font-weight:700;
-                  letter-spacing:0.08em;text-transform:uppercase;
-                  color:var(--green2);width:fit-content;">
-        🇲🇽 La Canasta · Mayoreo desde México
+  <div class="chart-section" id="charts" style="display:none;">
+    <div class="chart-block">
+      <div class="sec-title dbt">Distribución de Órdenes — Del Bravo Trade</div>
+      <div class="chart-inner">
+        <canvas class="donut" id="dbt-donut" role="img" aria-label="Distribución DBT"></canvas>
+        <div class="legend" id="dbt-legend"></div>
       </div>
-
-      <h1 class="brand" style="font-size:clamp(28px,4vw,44px);font-weight:700;line-height:1.1;color:var(--text)">
-        Auténticos sabores<br/>
-        <span style="background:linear-gradient(90deg,var(--green),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
-          directo de México 🎉
-        </span>
-      </h1>
-
-      <p style="font-size:14px;color:var(--text2);line-height:1.75;max-width:420px">
-        La Canasta, De la Rosa, Lucas, Vero, Pulparindo, Pavito y más — directo desde bodega con los mejores precios.
-      </p>
-
-      <div class="flex flex-wrap gap-2">
-        <span style="background:#fff;border:1px solid #D1FAE5;border-radius:100px;padding:5px 14px;font-size:12px;font-weight:500;color:var(--text2)">🍭 14 productos</span>
-        <span style="background:#fff;border:1px solid #D1FAE5;border-radius:100px;padding:5px 14px;font-size:12px;font-weight:500;color:var(--text2)">📦 Todo EE.UU.</span>
-        <span style="background:#fff;border:1px solid #D1FAE5;border-radius:100px;padding:5px 14px;font-size:12px;font-weight:500;color:var(--text2)">⚡ Confirmación por email</span>
+    </div>
+    <div class="chart-block">
+      <div class="sec-title som">Distribución de Órdenes — Specialties of Mexico</div>
+      <div class="chart-inner">
+        <canvas class="donut" id="som-donut" role="img" aria-label="Distribución SoM"></canvas>
+        <div class="legend" id="som-legend"></div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- ─── BRAND FILTER BAR ──────────────────────────────────────────── -->
-<div class="brand-bar sticky z-30 overflow-x-auto" style="top:64px">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex gap-3 min-w-max items-center">
-    <button @click="activeCategory = 'all'"
-      :class="activeCategory === 'all' ? 'active' : ''"
-      class="brand-tab-all">
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/>
-      </svg>
-      Todas
-    </button>
-    <div class="w-px h-9 flex-shrink-0" style="background:linear-gradient(to bottom,transparent,rgba(16,185,129,0.35),transparent)"></div>
-
-    <template x-for="cat in categories" :key="cat.id">
-      <button @click="activeCategory = cat.id"
-        :class="activeCategory === cat.id ? 'active' : ''"
-        class="brand-tab" :title="cat.name">
-        <img :src="'img/brands/' + cat.logo" :alt="cat.name"
-             style="height:52px;width:auto;max-width:140px;object-fit:contain;transition:all 0.25s"
-             @error="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'"/>
-        <span x-text="cat.name"
-              style="display:none;padding:4px 12px;font-size:12px;font-weight:700;
-                     background:var(--mint);color:var(--green3);border-radius:8px"></span>
-      </button>
-    </template>
-  </div>
+  <div class="footer" id="footer"></div>
 </div>
 
-<!-- ─── PRODUCTS ──────────────────────────────────────────────────── -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-  <div class="mb-10 flex items-center justify-between flex-wrap gap-4">
-    <div>
-      <h2 class="brand text-3xl font-bold mb-1" style="color:var(--text)">
-        <span x-text="activeCategory === 'all' ? 'Todos los productos' : categories.find(c=>c.id===activeCategory)?.name ?? activeCategory"></span>
-      </h2>
-      <p style="font-size:13px;color:var(--text2)">
-        <span x-text="filteredProducts.length + ' productos disponibles'"></span>
-      </p>
-    </div>
-
-    <!-- Logo de la marca activa -->
-    <div class="flex items-center gap-4">
-      <!-- Logo La Canasta (solo si esa categoría está activa o es "all") -->
-      <template x-if="activeCategory === 'La Canasta' || activeCategory === 'all'">
-        <div style="background:#fff;border:2px solid #D1FAE5;border-radius:20px;
-                    padding:12px 24px;box-shadow:0 4px 20px rgba(16,185,129,0.1);
-                    display:flex;align-items:center;gap:18px">
-          <img src="img/brands/la-canasta.png" alt="La Canasta"
-               style="height:84px;width:auto;object-fit:contain;
-                      filter:drop-shadow(0 2px 8px rgba(0,0,0,0.1))"
-               onerror="this.style.display='none'"/>
-          <div>
-            <p style="font-size:11px;font-weight:700;text-transform:uppercase;
-                      letter-spacing:0.08em;color:var(--green2);margin-bottom:2px">Marca</p>
-            <p style="font-size:16px;font-weight:700;color:var(--text)">La Canasta</p>
-            <p style="font-size:12px;color:var(--text2);opacity:0.7">Authentic Mexican Candies 🇲🇽</p>
-          </div>
-        </div>
-      </template>
-    </div>
-  </div>
-
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-    <template x-for="product in filteredProducts" :key="product.id">
-      <div class="candy-card" @click="openProduct(product)">
-        <!-- Image -->
-        <div class="h-40 flex items-center justify-center overflow-hidden relative"
-             :style="'background:linear-gradient(135deg,' + product.bg + 'cc,' + product.bg + '66)'">
-          <template x-if="product.img">
-            <img :src="'img/' + product.img" :alt="product.name"
-                 class="h-full w-full object-contain p-3"
-                 style="filter:drop-shadow(0 4px 12px rgba(0,0,0,0.12))"
-                 @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'"/>
-          </template>
-          <div :style="product.img ? 'display:none' : ''"
-               class="absolute inset-0 flex items-center justify-center text-6xl">
-            <span x-text="product.emoji"></span>
-          </div>
-        </div>
-        <!-- Body -->
-        <div class="p-4">
-          <p class="text-xs font-bold uppercase tracking-widest mb-1"
-             style="background:linear-gradient(90deg,var(--green),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent">
-            La Canasta
-          </p>
-          <h3 class="brand text-sm font-bold leading-tight mb-1 line-clamp-2" style="color:var(--text)" x-text="product.name"></h3>
-          <p class="text-xs mb-3" style="color:var(--text2);opacity:0.6" x-text="product.pack"></p>
-          <div class="flex items-center justify-between">
-            <span class="text-lg font-bold"
-              style="background:linear-gradient(90deg,var(--gold),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent"
-              x-text="'$' + product.price.toFixed(2)"></span>
-            <button @click.stop="addToCart(product)"
-              class="w-9 h-9 text-white rounded-xl flex items-center justify-center transition-all hover:scale-110 shadow-md"
-              style="background:linear-gradient(135deg,var(--green),var(--gold));box-shadow:0 4px 12px rgba(16,185,129,0.3)">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </template>
-  </div>
-
-  <div x-show="filteredProducts.length === 0" class="text-center py-24">
-    <p class="text-6xl mb-4">🍬</p>
-    <p class="text-2xl font-semibold mb-2 brand" style="color:var(--text)">No hay productos en esta categoría</p>
-    <p style="color:var(--text2)">Intenta seleccionar otra marca</p>
-  </div>
-</main>
-
-<!-- ─── PRODUCT MODAL ─────────────────────────────────────────────── -->
-<div x-cloak x-show="selectedProduct" @keydown.escape.window="selectedProduct = null"
-  class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
-  @click.self="selectedProduct = null">
-  <div x-show="selectedProduct"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0 scale-75"
-    x-transition:enter-end="opacity-100 scale-100"
-    class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl"
-    style="border:1.5px solid #D1FAE5">
-    <template x-if="selectedProduct">
-      <div>
-        <div class="h-56 flex items-center justify-center overflow-hidden relative"
-             :style="'background:linear-gradient(135deg,' + selectedProduct.bg + 'cc,' + selectedProduct.bg + '66)'">
-          <template x-if="selectedProduct.img">
-            <img :src="'img/' + selectedProduct.img" :alt="selectedProduct.name"
-                 class="h-full w-full object-contain p-4"
-                 style="filter:drop-shadow(0 8px 24px rgba(0,0,0,0.15))"
-                 @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'"/>
-          </template>
-          <div :style="selectedProduct.img ? 'display:none' : ''"
-               class="absolute inset-0 flex items-center justify-center text-8xl">
-            <span x-text="selectedProduct.emoji"></span>
-          </div>
-        </div>
-        <div class="p-7">
-          <p class="text-xs font-bold uppercase tracking-widest mb-2"
-             style="background:linear-gradient(90deg,var(--green),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent"
-             x-text="selectedProduct.brand"></p>
-          <h3 class="brand text-2xl font-bold mb-2" style="color:var(--text)" x-text="selectedProduct.name"></h3>
-          <p class="text-sm mb-2" style="color:var(--text2)" x-text="selectedProduct.pack"></p>
-          <p class="text-sm mb-6" style="color:var(--text2)" x-text="selectedProduct.description || 'Producto de calidad premium'"></p>
-          <div class="flex items-center justify-between mb-6">
-            <span class="text-3xl font-bold"
-              style="background:linear-gradient(90deg,var(--gold),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent"
-              x-text="'$' + selectedProduct.price.toFixed(2)"></span>
-            <div class="flex items-center gap-2 rounded-xl p-1.5" style="border:2px solid #D1FAE5;background:#F0FDF9">
-              <button @click="modalQty = Math.max(1, modalQty - 1)"
-                class="w-8 h-8 flex items-center justify-center font-bold transition-colors rounded-lg"
-                style="color:var(--text2)" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--text2)'">−</button>
-              <span x-text="modalQty" class="w-6 text-center font-semibold" style="color:var(--text)"></span>
-              <button @click="modalQty++"
-                class="w-8 h-8 flex items-center justify-center font-bold transition-colors rounded-lg"
-                style="color:var(--text2)" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--text2)'">+</button>
-            </div>
-          </div>
-          <button @click="addToCartQty(selectedProduct, modalQty); selectedProduct = null; modalQty = 1"
-            class="w-full text-white py-4 rounded-xl font-bold transition-all hover:shadow-lg transform hover:scale-105"
-            style="background:linear-gradient(135deg,var(--green),var(--gold));box-shadow:0 6px 20px rgba(16,185,129,0.3);font-family:'Fredoka',sans-serif">
-            Agregar al carrito
-          </button>
-        </div>
-      </div>
-    </template>
-  </div>
-</div>
-
-<!-- ─── CART SIDEBAR ──────────────────────────────────────────────── -->
-<div x-cloak x-show="cartOpen" class="fixed inset-0 z-50 flex" @keydown.escape.window="cartOpen = false">
-  <div class="flex-1 bg-black/30 backdrop-blur-sm" @click="cartOpen = false"></div>
-  <div x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full"
-    x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
-    class="w-full max-w-md bg-white flex flex-col shadow-2xl transform"
-    style="border-left:1.5px solid #D1FAE5">
-
-    <div class="flex items-center justify-between px-6 py-5"
-         style="border-bottom:1px solid #D1FAE5;background:linear-gradient(135deg,#ECFDF5,#FFFBEB)">
-      <h2 class="brand text-xl font-bold"
-          style="background:linear-gradient(90deg,var(--green),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent">
-        🛒 Tu pedido
-      </h2>
-      <button @click="cartOpen = false" class="transition-colors hover:scale-110" style="color:#9CA3AF">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
-
-    <div class="flex-1 overflow-y-auto px-6 py-4">
-      <div x-show="cart.length === 0" class="text-center py-16" style="color:#9CA3AF">
-        <p class="text-5xl mb-4">🍬</p>
-        <p class="text-lg font-semibold brand" style="color:var(--text)">Tu carrito está vacío</p>
-        <button @click="cartOpen = false"
-          class="mt-6 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all"
-          style="background:linear-gradient(135deg,var(--green),var(--gold));font-family:'Fredoka',sans-serif">
-          Seguir comprando
-        </button>
-      </div>
-
-      <div class="space-y-3">
-        <template x-for="(item, index) in cart" :key="item.id">
-          <div class="flex items-center gap-3 p-4 rounded-xl" style="background:linear-gradient(135deg,#F0FDF9,#FFFBEB);border:1px solid #D1FAE5">
-            <div class="w-14 h-14 rounded-xl flex items-center justify-center text-3xl flex-shrink-0 shadow-sm"
-                 :style="'background:' + item.bg">
-              <span x-text="item.emoji"></span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-bold uppercase" style="color:var(--green2)" x-text="item.brand"></p>
-              <p class="text-sm font-semibold truncate" style="color:var(--text)" x-text="item.name"></p>
-              <p class="text-xs" style="color:var(--text2)" x-text="item.pack"></p>
-            </div>
-            <div class="flex flex-col items-end gap-2">
-              <p class="text-sm font-bold"
-                 style="background:linear-gradient(90deg,var(--gold),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent"
-                 x-text="'$' + (item.price * item.qty).toFixed(2)"></p>
-              <div class="flex items-center gap-1 px-1.5 py-0.5 bg-white rounded-lg" style="border:1px solid #D1FAE5">
-                <button @click="updateQty(index, item.qty - 1)"
-                  class="w-5 h-5 flex items-center justify-center text-sm font-bold transition-colors"
-                  style="color:var(--text2)" onmouseover="this.style.color='var(--green2)'" onmouseout="this.style.color='var(--text2)'">−</button>
-                <span x-text="item.qty" class="w-4 text-center text-xs font-semibold" style="color:var(--text)"></span>
-                <button @click="updateQty(index, item.qty + 1)"
-                  class="w-5 h-5 flex items-center justify-center text-sm font-bold transition-colors"
-                  style="color:var(--text2)" onmouseover="this.style.color='var(--green2)'" onmouseout="this.style.color='var(--text2)'">+</button>
-              </div>
-            </div>
-          </div>
-        </template>
-      </div>
-    </div>
-
-    <div x-show="cart.length > 0" class="px-6 py-5 space-y-4" style="border-top:1px solid #D1FAE5;background:linear-gradient(135deg,#F0FDF9,#FFFBEB)">
-      <div class="flex justify-between text-sm" style="color:var(--text2)">
-        <span>Subtotal (<span x-text="cartCount"></span> items)</span>
-        <span class="font-semibold" style="color:var(--text)" x-text="'$' + cartTotal.toFixed(2)"></span>
-      </div>
-      <div class="flex justify-between text-sm" style="color:var(--text2)">
-        <span>Envío</span>
-        <span class="font-medium" style="color:var(--green2)">Por calcular</span>
-      </div>
-      <div class="flex justify-between font-bold pt-3" style="color:var(--text);border-top:1px solid #D1FAE5">
-        <span>Total</span>
-        <span class="text-lg" x-text="'$' + cartTotal.toFixed(2)"></span>
-      </div>
-      <button @click="cartOpen = false; checkoutOpen = true"
-        class="w-full text-white py-3.5 rounded-xl font-semibold transition-all hover:shadow-lg transform hover:scale-105"
-        style="background:linear-gradient(135deg,var(--green),var(--gold));box-shadow:0 6px 20px rgba(16,185,129,0.25);font-family:'Fredoka',sans-serif">
-        Proceder al pago →
-      </button>
-      <button @click="cart = []" class="w-full text-sm font-medium transition-colors py-2"
-              style="color:#9CA3AF" onmouseover="this.style.color='#EF4444'" onmouseout="this.style.color='#9CA3AF'">
-        Vaciar carrito
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ─── CHECKOUT MODAL ────────────────────────────────────────────── -->
-<div x-cloak x-show="checkoutOpen" @keydown.escape.window="checkoutOpen = false"
-  class="modal-backdrop fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
-  <div x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0 scale-75" x-transition:enter-end="opacity-100 scale-100"
-    class="bg-white rounded-3xl max-w-2xl w-full my-8 overflow-hidden shadow-2xl"
-    style="border:1.5px solid #D1FAE5">
-
-    <!-- Éxito -->
-    <div x-show="orderPlaced" class="p-12 text-center">
-      <div class="text-7xl mb-6">🎉</div>
-      <h2 class="brand text-4xl font-bold mb-3"
-          style="background:linear-gradient(90deg,var(--green),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent">
-        ¡Pedido confirmado!
-      </h2>
-      <p class="mb-3" style="color:var(--text2)">Número de pedido: <span class="font-bold" style="color:var(--text)" x-text="orderNumber"></span></p>
-      <p class="mb-8" style="color:var(--text2)">La bodega recibirá un email con los detalles de tu envío.</p>
-      <div class="rounded-2xl p-6 text-left text-sm mb-8" style="background:#F0FDF9;border:1px solid #D1FAE5">
-        <p class="font-bold mb-4" style="color:var(--text)">Resumen del pedido:</p>
-        <template x-for="item in cart" :key="item.id">
-          <div class="flex justify-between py-1.5" style="border-bottom:1px solid #D1FAE5">
-            <span style="color:var(--text2)" x-text="item.qty + 'x ' + item.name"></span>
-            <span class="font-semibold" style="color:var(--text)" x-text="'$' + (item.price * item.qty).toFixed(2)"></span>
-          </div>
-        </template>
-        <div class="flex justify-between pt-4 mt-4 font-bold" style="color:var(--text);border-top:2px solid #A7F3D0">
-          <span>Total</span>
-          <span x-text="'$' + cartTotal.toFixed(2)"></span>
-        </div>
-      </div>
-      <button @click="checkoutOpen = false; orderPlaced = false; cart = []"
-        class="text-white px-10 py-3.5 rounded-xl font-bold transition-all hover:shadow-lg transform hover:scale-105"
-        style="background:linear-gradient(135deg,var(--green),var(--gold));font-family:'Fredoka',sans-serif">
-        Seguir comprando
-      </button>
-    </div>
-
-    <!-- Formulario -->
-    <div x-show="!orderPlaced">
-      <div class="px-6 py-5 flex items-center justify-between"
-           style="border-bottom:1px solid #D1FAE5;background:linear-gradient(135deg,#ECFDF5,#FFFBEB)">
-        <h2 class="brand text-2xl font-bold" style="color:var(--text)">Datos de envío</h2>
-        <button @click="checkoutOpen = false" style="color:#9CA3AF" class="hover:scale-110 transition-transform">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-
-      <form @submit.prevent="placeOrder()" class="p-7 space-y-6">
-        <div>
-          <h3 class="brand text-lg font-bold mb-4" style="color:var(--text)">📋 Información de contacto</h3>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-semibold mb-2" style="color:var(--text2)">Nombre *</label>
-              <input x-model="form.firstName" required type="text" placeholder="Juan"
-                class="w-full px-4 py-3 text-base focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold mb-2" style="color:var(--text2)">Apellido *</label>
-              <input x-model="form.lastName" required type="text" placeholder="García"
-                class="w-full px-4 py-3 text-base focus:outline-none" />
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-semibold mb-2" style="color:var(--text2)">Email *</label>
-            <input x-model="form.email" required type="email" placeholder="correo@ejemplo.com"
-              class="w-full px-4 py-3 text-base focus:outline-none" />
-          </div>
-          <div>
-            <label class="block text-sm font-semibold mb-2" style="color:var(--text2)">Teléfono *</label>
-            <input x-model="form.phone" required type="tel" placeholder="(555) 000-0000"
-              class="w-full px-4 py-3 text-base focus:outline-none" />
-          </div>
-        </div>
-
-        <div>
-          <h3 class="brand text-lg font-bold mb-4" style="color:var(--text)">📦 Dirección de envío</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-semibold mb-2" style="color:var(--text2)">Dirección *</label>
-              <input x-model="form.address" required type="text" placeholder="123 Main Street"
-                class="w-full px-4 py-3 text-base focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold mb-2" style="color:var(--text2)">Apartamento / Suite (opcional)</label>
-              <input x-model="form.address2" type="text" placeholder="Apt 4B"
-                class="w-full px-4 py-3 text-base focus:outline-none" />
-            </div>
-            <div class="grid grid-cols-3 gap-4">
-              <div class="col-span-1">
-                <label class="block text-sm font-semibold mb-2" style="color:var(--text2)">Ciudad *</label>
-                <input x-model="form.city" required type="text" placeholder="Houston"
-                  class="w-full px-4 py-3 text-base focus:outline-none" />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold mb-2" style="color:var(--text2)">Estado *</label>
-                <select x-model="form.state" required class="w-full px-4 py-3 text-base focus:outline-none">
-                  <option value="">—</option>
-                  <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
-                  <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
-                  <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
-                  <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
-                  <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
-                  <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
-                  <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
-                  <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
-                  <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
-                  <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
-                  <option>SD</option><option>TN</option><option selected>TX</option>
-                  <option>UT</option><option>VT</option><option>VA</option><option>WA</option>
-                  <option>WV</option><option>WI</option><option>WY</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-semibold mb-2" style="color:var(--text2)">ZIP *</label>
-                <input x-model="form.zip" required type="text" placeholder="77001" maxlength="10"
-                  class="w-full px-4 py-3 text-base focus:outline-none" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold mb-2" style="color:var(--text2)">Notas para la bodega (opcional)</label>
-          <textarea x-model="form.notes" rows="3" placeholder="Instrucciones especiales..."
-            class="w-full px-4 py-3 text-base focus:outline-none resize-none"></textarea>
-        </div>
-
-        <!-- Resumen -->
-        <div class="rounded-2xl p-6" style="background:linear-gradient(135deg,#ECFDF5,#FFFBEB);border:1px solid #D1FAE5">
-          <p class="font-bold mb-4 text-lg" style="color:var(--text)">Resumen del pedido</p>
-          <template x-for="item in cart" :key="item.id">
-            <div class="flex justify-between text-sm py-1.5" style="color:var(--text2);border-bottom:1px solid #D1FAE5">
-              <span x-text="item.qty + 'x ' + item.name + ' (' + item.pack + ')'"></span>
-              <span class="font-semibold" style="color:var(--text)" x-text="'$' + (item.price * item.qty).toFixed(2)"></span>
-            </div>
-          </template>
-          <div class="flex justify-between font-bold pt-4 mt-4" style="color:var(--text);border-top:2px solid #A7F3D0">
-            <span>Total</span>
-            <span class="text-lg" x-text="'$' + cartTotal.toFixed(2)"></span>
-          </div>
-        </div>
-
-        <!-- Nota pago -->
-        <div class="rounded-xl p-4 text-sm" style="background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E">
-          💳 <strong>Pago:</strong> Recibirás un email con instrucciones de pago después de confirmar tu pedido.
-        </div>
-
-        <button type="submit" :disabled="submitting"
-          class="w-full text-white py-4 rounded-xl font-bold transition-all hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-3 disabled:opacity-60"
-          style="background:linear-gradient(135deg,var(--green),var(--gold));box-shadow:0 6px 20px rgba(16,185,129,0.25);font-family:'Fredoka',sans-serif">
-          <svg x-show="submitting" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-          </svg>
-          <span x-text="submitting ? 'Enviando...' : 'Confirmar pedido'"></span>
-        </button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- ─── FOOTER ────────────────────────────────────────────────────── -->
-<footer class="text-white mt-16 px-4 relative overflow-hidden" style="padding:60px 16px 44px;background:linear-gradient(180deg,#F0FDF9 0%,#D1FAE5 100%);border-top:1px solid rgba(16,185,129,0.15)">
-
-  <!-- Logo de fondo grande (logo nav, semi-transparente) -->
-  <img src="img/logo-sabor-chido-nav.png" alt="" aria-hidden="true"
-       style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-              height:756px;width:auto;opacity:0.07;pointer-events:none;
-              filter:blur(2px);user-select:none"/>
-
-  <div class="max-w-7xl mx-auto text-center relative" style="z-index:1">
-    <!-- Logo visible -->
-    <img src="img/logo-sabor-chido-nav.png" alt="Sabor Chido"
-         style="height:216px;width:auto;margin:0 auto 20px;display:block;
-                filter:drop-shadow(0 8px 32px rgba(16,185,129,0.35))"
-         onerror="this.style.display='none'"/>
-
-    <p class="brand text-lg mb-6" style="color:var(--text2)">Authentic Mexican Candy 🇲🇽</p>
-
-    <div class="picado" style="max-width:300px;margin:0 auto 24px;border-radius:99px;opacity:0.6"></div>
-
-    <div class="flex justify-center gap-5 mb-6 text-2xl">
-      <span class="cursor-pointer transition-transform hover:scale-125">🍭</span>
-      <span class="cursor-pointer transition-transform hover:scale-125">🥭</span>
-      <span class="cursor-pointer transition-transform hover:scale-125">🍋</span>
-      <span class="cursor-pointer transition-transform hover:scale-125">🌶️</span>
-    </div>
-
-    <p style="color:var(--text2);opacity:0.5;font-size:12px">
-      © 2026 Sabor Chido. All rights reserved. | Made with ❤️ for candy lovers
-    </p>
-  </div>
-</footer>
-
-<!-- ─── SCRIPT ────────────────────────────────────────────────────── -->
 <script>
-function store() {
-  return {
-    cart: [],
-    cartOpen: false,
-    checkoutOpen: false,
-    orderPlaced: false,
-    orderNumber: '',
-    submitting: false,
-    selectedProduct: null,
-    modalQty: 1,
-    activeCategory: 'all',
-    form: {
-      firstName: '', lastName: '', email: '', phone: '',
-      address: '', address2: '', city: '', state: 'TX', zip: '', notes: ''
-    },
+const URL_DBT='https://docs.google.com/spreadsheets/d/e/2PACX-1vSoBIqicKVmueKrNsbxUGrDXbkamuFsSr8uFxE-rsZTIZzv7XOfpwqp5CJolwfVM7B4T2jBI0KqwU0E/pub?gid=3593452&single=true&output=csv';
+const URL_SOM='https://docs.google.com/spreadsheets/d/e/2PACX-1vSoBIqicKVmueKrNsbxUGrDXbkamuFsSr8uFxE-rsZTIZzv7XOfpwqp5CJolwfVM7B4T2jBI0KqwU0E/pub?gid=1882307317&single=true&output=csv';
+const MAX_ORDERS = 10;
+const MAX_CLIENTS = 8;
 
-    categories: [
-      { id: 'La Canasta', name: 'La Canasta', logo: 'la-canasta.png' },
-    ],
+function splitLine(l){const r=[];let c='',q=false;for(const ch of l){if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r;}
 
-    products: [
-      { id:1,  category:'La Canasta', brand:'La Canasta', name:'Palanqueta Mixnut',        pack:'2/12ct/3.5oz',  price:18.99, emoji:'🥜', bg:'#FEF3C7', img:'hd/palanqueta-mixnut.png',    description:'Deliciosa palanqueta con mezcla de nueces' },
-      { id:2,  category:'La Canasta', brand:'La Canasta', name:'Palanqueta Peanut',        pack:'2/12ct/3.5oz',  price:16.99, emoji:'🥜', bg:'#FEF3C7', img:'hd/palanqueta-peanut.png',    description:'Clásica palanqueta de cacahuate' },
-      { id:3,  category:'La Canasta', brand:'La Canasta', name:'Palanqueta Sesame',        pack:'2/12ct/3.5oz',  price:16.99, emoji:'🫘', bg:'#FFFBEB', img:'hd/palanqueta-sesame.png',    description:'Palanqueta crujiente con ajonjolí' },
-      { id:4,  category:'La Canasta', brand:'La Canasta', name:'Palanqueta Pecan',         pack:'2/12ct/3.5oz',  price:19.99, emoji:'🌰', bg:'#FEF3C7', img:'hd/palanqueta-pecan.png',     description:'Premium palanqueta de pecana' },
-      { id:5,  category:'La Canasta', brand:'La Canasta', name:'Palanqueta Tropical',      pack:'2/12ct/3.5oz',  price:18.99, emoji:'🍍', bg:'#ECFDF5', img:'hd/palanqueta-tropical.png',  description:'Sabor tropical único y refrescante' },
-      { id:6,  category:'La Canasta', brand:'La Canasta', name:'Garapiñado Pecan',         pack:'2/12ct/1.8oz',  price:14.99, emoji:'🌰', bg:'#FEF3C7', img:'hd/garapinado-pecan.png',     description:'Garapiñado dulce de pecana' },
-      { id:7,  category:'La Canasta', brand:'La Canasta', name:'Garapiñado Red Pecan',     pack:'2/12ct/3.5oz',  price:17.99, emoji:'🌰', bg:'#FEF2F2', img:'hd/garapinado-red-pecan.png', description:'Garapiñado rojo de pecana' },
-      { id:8,  category:'La Canasta', brand:'La Canasta', name:'Cocada Original',          pack:'2/24ct/3.17oz', price:21.99, emoji:'🥥', bg:'#ECFDF5', img:'hd/cocada-original.png',      description:'Cocada tradicional mexicana' },
-      { id:9,  category:'La Canasta', brand:'La Canasta', name:'Cocada Bandera',           pack:'2/24ct/3.17oz', price:21.99, emoji:'🥥', bg:'#EFF6FF', img:'hd/cocada-bandera.png',       description:'Cocada con los colores de México' },
-      { id:10, category:'La Canasta', brand:'La Canasta', name:'Cocada Alfajor',           pack:'2/24ct/3.17oz', price:22.99, emoji:'🥥', bg:'#FFF7ED', img:'hd/cocada-coconut-bar.png',   description:'Cocada estilo alfajor' },
-      { id:11, category:'La Canasta', brand:'La Canasta', name:'Cocada Guayaba',           pack:'2/24ct/3.17oz', price:21.99, emoji:'🍈', bg:'#FEF3C7', img:'hd/cocada-guayaba.png',       description:'Cocada con relleno de guayaba' },
-      { id:12, category:'La Canasta', brand:'La Canasta', name:'Dulce de Leche con Nuez', pack:'2/24ct/3.52oz',  price:23.99, emoji:'🍮', bg:'#FEF3C7', img:'hd/dulce-de-leche-nuez.png',  description:'Cremoso dulce de leche con nuez' },
-      { id:13, category:'La Canasta', brand:'La Canasta', name:'Dulce de Leche Barra',    pack:'2/24ct/3.17oz',  price:22.99, emoji:'🍮', bg:'#FFFBEB', img:'hd/dulce-de-leche-barra.png', description:'Barra de dulce de leche' },
-      { id:14, category:'La Canasta', brand:'La Canasta', name:'Oblea Mega Dulce',         pack:'2/12ct/3.17oz', price:19.99, emoji:'🫓', bg:'#FFF7ED', img:'hd/oblea-mega-dulce.png',     description:'Oblea grande rellena de cajeta' },
-    ],
+function parseCSV(txt){
+  const lines=txt.trim().split('\n');
+  const hi=lines.findIndex(l=>l.toLowerCase().includes('cliente'));
+  if(hi<0)return[];
+  const hdrs=splitLine(lines[hi]).map(h=>h.trim().replace(/^"|"$/g,''));
+  const rows=[];
+  for(let i=hi+1;i<lines.length;i++){
+    const v=splitLine(lines[i]).map(x=>x.trim().replace(/^"|"$/g,''));
+    if(v.length<2)continue;
+    const row={};hdrs.forEach((h,idx)=>row[h]=v[idx]||'');
+    if(row['Cliente']&&row['Cliente']!=='Cliente')rows.push(row);
+  }
+  return rows;
+}
 
-    get filteredProducts() {
-      return this.activeCategory === 'all'
-        ? this.products
-        : this.products.filter(p => p.category === this.activeCategory);
-    },
-    get cartCount() { return this.cart.reduce((s, i) => s + i.qty, 0); },
-    get cartTotal() { return this.cart.reduce((s, i) => s + (i.price * i.qty), 0); },
+function ns(s){
+  if(!s)return'';const l=s.toLowerCase().trim();
+  if(l==='enviado')return'Enviado';
+  if(l==='pendiente')return'Pendiente';
+  if(l.includes('proceso'))return'En proceso';
+  return s;
+}
+function gf(row,...keys){for(const k of keys)if(row[k]!==undefined&&row[k]!=='')return row[k];return'';}
+function daysClass(d){if(isNaN(d)||d==='')return'';if(d<0)return'days-late';if(d<=5)return'days-warn';return'days-ok';}
 
-    init() {
-      const saved = localStorage.getItem('sabor-chido-cart');
-      if (saved) { try { this.cart = JSON.parse(saved); } catch(e) {} }
-    },
-    openProduct(p) { this.selectedProduct = p; this.modalQty = 1; },
-    addToCart(p) {
-      const ex = this.cart.find(i => i.id === p.id);
-      ex ? ex.qty++ : this.cart.push({ ...p, qty: 1 });
-      this.saveCart();
-    },
-    addToCartQty(p, qty) {
-      const ex = this.cart.find(i => i.id === p.id);
-      ex ? (ex.qty += qty) : this.cart.push({ ...p, qty });
-      this.saveCart();
-    },
-    updateQty(idx, n) {
-      n <= 0 ? this.cart.splice(idx, 1) : (this.cart[idx].qty = n);
-      this.saveCart();
-    },
-    saveCart() { localStorage.setItem('sabor-chido-cart', JSON.stringify(this.cart)); },
-    async placeOrder() {
-      if (!this.cart.length) { alert('Tu carrito está vacío'); return; }
-      this.submitting = true;
-      await new Promise(r => setTimeout(r, 2000));
-      this.orderNumber = 'CHIDO-' + Date.now().toString().slice(-6);
-      this.orderPlaced = true;
-      this.submitting = false;
-      this.form = { firstName:'', lastName:'', email:'', phone:'', address:'', address2:'', city:'', state:'TX', zip:'', notes:'' };
-    }
+function buildKPIs(rows){
+  const t=rows.length,e=rows.filter(r=>ns(r['Estado'])==='Enviado').length,
+        p=rows.filter(r=>ns(r['Estado'])==='Pendiente').length,
+        pr=rows.filter(r=>ns(r['Estado'])==='En proceso').length;
+  return`<div class="kpi-strip">
+    <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-val total">${t}</div></div>
+    <div class="kpi"><div class="kpi-label">Enviados</div><div class="kpi-val sent">${e}</div></div>
+    <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-val pending">${p}</div></div>
+    <div class="kpi"><div class="kpi-label">En proceso</div><div class="kpi-val process">${pr}</div></div>
+  </div>`;}
+
+function buildOrders(rows, cls=''){
+  const active=rows.filter(r=>ns(r['Estado'])!=='Enviado').slice(0,MAX_ORDERS);
+  let h=`<div class="sec-title ${cls}">Órdenes Activas</div>
+  <table class="tbl">
+    <colgroup><col style="width:105px"><col style="width:155px"><col style="width:90px"><col style="width:90px"><col style="width:105px"><col style="width:58px"><col style="width:100px"></colgroup>
+    <thead><tr><th>PO #</th><th>Cliente</th><th>F.Pedido</th><th>Vence</th><th>Destino</th><th>Días</th><th>Estado</th></tr></thead>
+    <tbody>`;
+  active.forEach(r=>{
+    const dr=gf(r,'Días Restantes','Dias Restantes');
+    const d=parseInt(dr);
+    const ds=isNaN(d)||dr===''?'':`<span class="${daysClass(d)}">${d<0?d+'d':'+'+d+'d'}</span>`;
+    const st=ns(r['Estado']);
+    const badge=st==='En proceso'?`<span class="badge b-proc">En proceso</span>`:
+                 st==='Enviado'  ?`<span class="badge b-sent">Enviado</span>`:
+                                  `<span class="badge b-pend">Pendiente</span>`;
+    h+=`<tr><td>${gf(r,'PO #','PO#')}</td><td>${r['Cliente']||''}</td>
+      <td>${gf(r,'Fecha Pedido','F. Pedido')}</td>
+      <td>${gf(r,'Fecha Vencimiento','F. Venc.')}</td>
+      <td>${r['Destino']||''}</td><td>${ds}</td><td>${badge}</td></tr>`;
+  });
+  return h+'</tbody></table>';}
+
+function buildClients(rows, cls=''){
+  const m={};
+  rows.forEach(r=>{
+    const c=(r['Cliente']||'').trim();if(!c)return;
+    if(!m[c])m[c]={t:0,e:0,p:0,pr:0};
+    const s=ns(r['Estado']);m[c].t++;
+    if(s==='Enviado')m[c].e++;
+    if(s==='Pendiente')m[c].p++;
+    if(s==='En proceso')m[c].pr++;
+  });
+  // Sort by total desc, take top MAX_CLIENTS
+  const sorted = Object.entries(m).sort((a,b)=>b[1].t-a[1].t).slice(0,MAX_CLIENTS);
+  let h=`<div class="sec-title ${cls}">Por Cliente</div>
+  <table class="client-tbl">
+    <colgroup><col style="width:155px"><col style="width:42px"><col style="width:42px"><col style="width:54px"><col style="width:54px"><col style="width:68px"></colgroup>
+    <thead><tr>
+      <th>Cliente</th><th>Tot</th>
+      <th style="color:#3fb950">Env</th>
+      <th style="color:#f85149">Pend</th>
+      <th style="color:#d29922">Proc</th>
+      <th>% Compl.</th>
+    </tr></thead><tbody>`;
+  sorted.forEach(([c,d])=>{
+    const pct=d.t>0?Math.round(d.e/d.t*100):0;
+    const pc=pct===100?'#3fb950':pct>0?'#d29922':'#f85149';
+    h+=`<tr><td>${c}</td><td>${d.t}</td>
+      <td style="color:#3fb950">${d.e}</td>
+      <td style="color:#f85149">${d.p}</td>
+      <td style="color:#d29922">${d.pr}</td>
+      <td style="color:${pc};font-weight:700">${pct}%</td></tr>`;
+  });
+  return h+'</tbody></table>';}
+
+function buildDonut(cid,lid,rows){
+  const e=rows.filter(r=>ns(r['Estado'])==='Enviado').length;
+  const p=rows.filter(r=>ns(r['Estado'])==='Pendiente').length;
+  const pr=rows.filter(r=>ns(r['Estado'])==='En proceso').length;
+  new Chart(document.getElementById(cid).getContext('2d'),{
+    type:'doughnut',
+    data:{datasets:[{data:[e,p,pr],backgroundColor:['#3fb950','#f85149','#d29922'],borderWidth:2,borderColor:'#161b22'}]},
+    options:{responsive:false,plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:'62%'}
+  });
+  document.getElementById(lid).innerHTML=`
+    <div class="legend-item"><span class="legend-dot" style="background:#3fb950"></span><span class="legend-label">Enviado</span><span class="legend-val" style="color:#3fb950">${e}</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#f85149"></span><span class="legend-label">Pendiente</span><span class="legend-val" style="color:#f85149">${p}</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#d29922"></span><span class="legend-label">En proceso</span><span class="legend-val" style="color:#d29922">${pr}</span></div>`;}
+
+async function init(){
+  try{
+    const [cD,cS]=await Promise.all([
+      fetch(URL_DBT).then(r=>r.text()),
+      fetch(URL_SOM).then(r=>r.text())
+    ]);
+    const rD=parseCSV(cD),rS=parseCSV(cS);
+
+    document.getElementById('panels').innerHTML=
+      `<div class="panel"><div class="panel-hdr dbt"><span>Del Bravo Trade, LLC</span></div>${buildKPIs(rD)}${buildOrders(rD,'dbt')}</div>`+
+      `<div class="panel"><div class="panel-hdr som"><span>Specialties of Mexico (SoM)</span></div>${buildKPIs(rS)}${buildOrders(rS,'som')}</div>`;
+
+    document.getElementById('dbt-clients').innerHTML=buildClients(rD,'dbt');
+    document.getElementById('som-clients').innerHTML=buildClients(rS,'som');
+    document.getElementById('clients').style.display='grid';
+
+    document.getElementById('charts').style.display='grid';
+    buildDonut('dbt-donut','dbt-legend',rD);
+    buildDonut('som-donut','som-legend',rS);
+
+    const f=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+    document.getElementById('ti').textContent=`Actualizado: ${f}  |  DBT: ${rD.length} órdenes  |  SoM: ${rS.length} órdenes`;
+    document.getElementById('footer').textContent='Datos en tiempo real desde Google Sheets — se actualiza cada 5 minutos';
+  }catch(e){
+    document.getElementById('panels').innerHTML=
+      `<div style="display:flex;align-items:center;justify-content:center;color:#f85149;font-size:13px;grid-column:span 2">Error: ${e.message}</div>`;
   }
 }
+init();
+setInterval(()=>location.reload(),300000);
 </script>
-
 </body>
 </html>
