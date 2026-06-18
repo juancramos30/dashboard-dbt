@@ -1,11 +1,11 @@
 # dashboard-dbt
 
-Estructura del repo:
+Este repo contiene dos apps independientes, sin relación entre sí, cada una en su
+propia carpeta:
 
 ```
-index.html          # página de inicio, enlaza a las dos apps
-playlist/index.html # Playlist del Día (en vivo, Firebase)
-dashboard/index.html# Operations Dashboard (pedidos DBT/SoM)
+playlist/index.html  # Playlist del Día (en vivo, Firebase)
+dashboard/index.html # Operations Dashboard (pedidos DBT/SoM)
 ```
 
 ## Playlist del Día (`playlist/`)
