@@ -5,28 +5,27 @@
 Lista de canciones compartida en vivo: cualquiera con el link puede agregar o quitar
 canciones y los cambios se sincronizan al instante para todos (Firebase Realtime Database).
 
-Para activarla:
+Conectada al proyecto Firebase **coro-app-c-claretianos**
+(`https://coro-app-c-claretianos-default-rtdb.firebaseio.com`).
 
-1. Crea un proyecto gratuito en https://console.firebase.google.com.
-2. Habilita **Realtime Database** (modo de prueba o reglas abiertas, ver abajo).
-3. En *Project settings > General > Your apps*, registra una app web y copia el
-   objeto de configuración.
-4. Pega esos valores en `firebaseConfig` dentro de `index.html` (reemplaza los `TODO_*`).
-5. En las reglas de Realtime Database, usa algo como:
+**Importante:** la base se creó en "modo de prueba", cuyas reglas por defecto
+**expiran a los 30 días** (deja de funcionar la app si no se cambian antes). Para
+dejarlo permanente, ve a Firebase Console > Realtime Database > pestaña **Reglas**
+y reemplaza el contenido por:
 
-   ```json
-   {
-     "rules": {
-       "playlist": {
-         ".read": true,
-         ".write": true
-       }
-     }
-   }
-   ```
+```json
+{
+  "rules": {
+    "playlist": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
+```
 
-   Esto permite que cualquiera lea y escriba el playlist (sin login), tal como está
-   pensada la app. Si más adelante quieres restringir quién edita, cambia estas reglas.
+Esto permite que cualquiera lea y escriba el playlist (sin login), tal como está
+pensada la app. Si más adelante quieres restringir quién edita, cambia estas reglas.
 
 ## Operations Dashboard (`dashboard.html`)
 

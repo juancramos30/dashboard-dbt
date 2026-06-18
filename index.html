@@ -72,13 +72,17 @@ import {
 // TODO: reemplaza con la configuración de tu propio proyecto Firebase
 // (Firebase Console > Project settings > General > Your apps > SDK setup and configuration)
 const firebaseConfig = {
-  apiKey: "TODO_API_KEY",
-  authDomain: "TODO_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://TODO_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "TODO_PROJECT_ID",
+  apiKey: "AIzaSyAJgcBQw9D_nalSoXiGjt3zZMTbmPtUOGM",
+  authDomain: "coro-app-c-claretianos.firebaseapp.com",
+  databaseURL: "https://coro-app-c-claretianos-default-rtdb.firebaseio.com",
+  projectId: "coro-app-c-claretianos",
+  storageBucket: "coro-app-c-claretianos.firebasestorage.app",
+  messagingSenderId: "736772466685",
+  appId: "1:736772466685:web:5ee47b843e230fb3cc1b94",
+  measurementId: "G-9CJMCS0XGN",
 };
 
-const isConfigured = !Object.values(firebaseConfig).some(v => v.startsWith("TODO_"));
+const isConfigured = !Object.values(firebaseConfig).some(v => v.startsWith && v.startsWith("TODO_"));
 
 const listEl = document.getElementById('list');
 const warnEl = document.getElementById('warn');
