@@ -69,8 +69,6 @@ import {
   getDatabase, ref, push, remove, onValue, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// TODO: reemplaza con la configuración de tu propio proyecto Firebase
-// (Firebase Console > Project settings > General > Your apps > SDK setup and configuration)
 const firebaseConfig = {
   apiKey: "AIzaSyAJgcBQw9D_nalSoXiGjt3zZMTbmPtUOGM",
   authDomain: "coro-app-c-claretianos.firebaseapp.com",
@@ -82,7 +80,7 @@ const firebaseConfig = {
   measurementId: "G-9CJMCS0XGN",
 };
 
-const isConfigured = !Object.values(firebaseConfig).some(v => v.startsWith && v.startsWith("TODO_"));
+const isConfigured = !Object.values(firebaseConfig).some(v => v.startsWith("TODO_"));
 
 const listEl = document.getElementById('list');
 const warnEl = document.getElementById('warn');
