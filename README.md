@@ -1,6 +1,14 @@
 # dashboard-dbt
 
-## Playlist del Día (`index.html`)
+Estructura del repo:
+
+```
+index.html          # página de inicio, enlaza a las dos apps
+playlist/index.html # Playlist del Día (en vivo, Firebase)
+dashboard/index.html# Operations Dashboard (pedidos DBT/SoM)
+```
+
+## Playlist del Día (`playlist/`)
 
 Lista de canciones compartida en vivo: cualquiera con el link puede agregar o quitar
 canciones y los cambios se sincronizan al instante para todos (Firebase Realtime Database).
@@ -27,7 +35,7 @@ y reemplaza el contenido por:
 Esto permite que cualquiera lea y escriba el playlist (sin login), tal como está
 pensada la app. Si más adelante quieres restringir quién edita, cambia estas reglas.
 
-## Operations Dashboard (`dashboard.html`)
+## Operations Dashboard (`dashboard/`)
 
 Dashboard de operaciones de pedidos para Del Bravo Trade & Specialties of Mexico,
 alimentado en tiempo real desde Google Sheets (CSV publicado). Se actualiza
